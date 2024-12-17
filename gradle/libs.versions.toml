@@ -9,6 +9,11 @@ grpcJava = "1.65.1"
 grpcKotlin = "1.4.1"
 coroutines = "1.8.1"
 protobuf = "3.25.3"
+kotest = "5.7.2"
+mockk = "1.13.7"
+gson = "2.10.1"
+kotlinpoet = "1.16.0"
+symbolProcessingApi = "1.9.22-1.0.17"
 
 [libraries]
 grpc-okhttp = { module = "io.grpc:grpc-okhttp", version.ref = "grpcJava" }
@@ -24,6 +29,12 @@ protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protob
 protobuf-kotlin-lite = { group = "com.google.protobuf", name = "protobuf-kotlin-lite", version.ref = "protobuf" }
 protoc-gen-grpc-java = { group = "io.grpc", name = "protoc-gen-grpc-java", version.ref = "grpcJava" }
 protoc-gen-grpc-kotlin = { group = "io.grpc", name = "protoc-gen-grpc-kotlin", version.ref = "grpcKotlin" }
+kotest = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
+kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
+symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -32,3 +43,4 @@ kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 protobuf = { id = "com.google.protobuf", version = "0.9.4" }
 dokka = { id = "org.jetbrains.dokka", version = "1.9.10" }
+pluginPublishing = { id = "com.gradle.plugin-publish", version = "1.2.1" }

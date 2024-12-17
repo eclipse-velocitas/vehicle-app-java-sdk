@@ -15,6 +15,8 @@
  */
 
 pluginManagement {
+    includeBuild("vss-processor-plugin")
+
     repositories {
         google {
             content {
@@ -37,3 +39,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "vehicle-app-java-sdk"
 include(":sdk")
+include(":vss-processor")
+include(":test-core")

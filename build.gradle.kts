@@ -16,6 +16,8 @@
 
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_NAME
+import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_PATH_KEY
 
 /*
  * Copyright (c) 2024 Contributors to the Eclipse Foundation
@@ -33,12 +35,15 @@ import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+val versionDefaultPath = "$rootDir/$VERSION_FILE_DEFAULT_NAME"
+rootProject.ext[VERSION_FILE_DEFAULT_PATH_KEY] = versionDefaultPath
+
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.android) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.detekt)
+    version
 }
 
 dependencies {
