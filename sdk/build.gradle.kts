@@ -20,12 +20,24 @@ plugins {
     id("java-library")
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.protobuf)
+    alias(libs.plugins.dokka)
     ktlint
+}
+
+tasks.register("javadocJar", Jar::class) {
+    dependsOn("dokkaHtml")
+
+    val buildDir = layout.buildDirectory.get()
+    from("$buildDir/dokka/html")
+    archiveClassifier.set("javadoc")
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
     targetCompatibility = JavaVersion.VERSION_11
+
+    withJavadocJar() // needs to be called after tasks.register("javadocJar")
+    withSourcesJar()
 }
 
 kotlin {
