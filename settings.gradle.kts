@@ -35,5 +35,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "vehicle-app-kotlin-template"
+rootProject.name = "vehicle-app-java-sdk"
 include(":sdk")
