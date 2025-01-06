@@ -1,5 +1,5 @@
-import org.eclipse.kuksa.vssprocessor.plugin.version.SemanticVersion
-import org.eclipse.kuksa.vssprocessor.plugin.version.VERSION_FILE_DEFAULT_NAME
+import org.eclipse.velocitas.vssprocessor.plugin.version.SemanticVersion
+import org.eclipse.velocitas.vssprocessor.plugin.version.VERSION_FILE_DEFAULT_NAME
 
 /*
  * Copyright (c) 2023 Contributors to the Eclipse Foundation
@@ -49,8 +49,8 @@ gradlePlugin {
 
     plugins {
         create("VssProcessorPlugin") {
-            id = "org.eclipse.kuksa.vss-processor-plugin"
-            implementationClass = "org.eclipse.kuksa.vssprocessor.plugin.VssProcessorPlugin"
+            id = "org.eclipse.velocitas.vss-processor-plugin"
+            implementationClass = "org.eclipse.velocitas.vssprocessor.plugin.VssProcessorPlugin"
             displayName = "VSS Processor Plugin"
             tags.set(listOf("KUKSA", "Vehicle Signal Specification", "VSS", "Android", "Kotlin"))
             description = pluginDescription
