@@ -64,7 +64,7 @@ tasks.withType<Test>().configureEach {
 publish {
     mavenPublicationName = "release"
     componentName = "java"
-    description = "Vehicle Signal Specification (VSS) Code Generator for the KUKSA SDK"
+    description = "Vehicle Signal Specification (VSS) Code Generator for the Velocitas Vehicle App SDK"
 }
 
 tasks.register("javadocJar", Jar::class) {

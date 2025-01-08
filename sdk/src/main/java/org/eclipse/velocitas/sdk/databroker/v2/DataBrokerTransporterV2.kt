@@ -14,26 +14,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.eclipse.velocitas.sdk.grpc
+package org.eclipse.velocitas.sdk.databroker.v2
 
 import kotlinx.coroutines.flow.Flow
-import io.grpc.ChannelCredentials
-import io.grpc.Grpc
-import io.grpc.InsecureChannelCredentials
+import io.grpc.ConnectivityState
 import io.grpc.ManagedChannel
+import io.grpc.StatusException
+import org.eclipse.kuksa.connectivity.authentication.JsonWebToken
+import org.eclipse.kuksa.connectivity.databroker.DataBrokerException
 import org.eclipse.kuksa.proto.v2.KuksaValV2
-import org.eclipse.kuksa.proto.v2.KuksaValV2.ActuateResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.BatchActuateResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetServerInfoResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetValueResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetValuesResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.ListMetadataResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.OpenProviderStreamRequest
-import org.eclipse.kuksa.proto.v2.KuksaValV2.OpenProviderStreamResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.PublishValueResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.SubscribeResponse
-import org.eclipse.kuksa.proto.v2.Types.Datapoint
-import org.eclipse.kuksa.proto.v2.Types.SignalID
+import org.eclipse.kuksa.proto.v2.Types
+import org.eclipse.kuksa.proto.v2.Types.Value
 import org.eclipse.kuksa.proto.v2.VALGrpcKt
 import org.eclipse.kuksa.proto.v2.actuateRequest
 import org.eclipse.kuksa.proto.v2.batchActuateRequest
@@ -44,33 +35,30 @@ import org.eclipse.kuksa.proto.v2.listMetadataRequest
 import org.eclipse.kuksa.proto.v2.publishValueRequest
 import org.eclipse.kuksa.proto.v2.subscribeByIdRequest
 import org.eclipse.kuksa.proto.v2.subscribeRequest
-import org.eclipse.velocitas.sdk.logging.Logger
-
-private const val TAG = "CoroutineBrokerGrpcFacade"
 
 /**
- * CoroutineBrokerGrpcFacade provides synchronous communication using coroutines against the VehicleDataBroker.
- * The current implementation uses the 'kuksa.val.v2' protocol which can be found here:
- * https://github.com/eclipse-kuksa/kuksa-databroker/tree/main/proto/kuksa/val/v2.
+ * Encapsulates the Protobuf-specific interactions with the DataBroker send over gRPC.
+ * The DataBrokerTransporter requires a [managedChannel] which is already connected to the corresponding DataBroker.
+ *
+ * @throws IllegalStateException in case the state of the [managedChannel] is not [ConnectivityState.READY]
  */
-@Suppress("TooManyFunctions")
-class CoroutineBrokerGrpcFacade(
-    host: String,
-    port: Int,
-    channelCredentials: ChannelCredentials = InsecureChannelCredentials.create(),
-) : GrpcClient {
-    private val channel: ManagedChannel = Grpc.newChannelBuilderForAddress(
-        host,
-        port,
-        channelCredentials,
-    ).build()
-
-    private val coroutineStub: VALGrpcKt.VALCoroutineStub = VALGrpcKt.VALCoroutineStub(channel)
+internal class DataBrokerTransporterV2(
+    private val managedChannel: ManagedChannel,
+) {
 
     init {
-        Logger.info(TAG, "Connecting to gRPC service at $host:$port")
-        channel.getState(true)
+        val state = managedChannel.getState(false)
+        check(state == ConnectivityState.READY) {
+            "ManagedChannel needs to be connected to the target"
+        }
     }
+
+    /**
+     * A JsonWebToken can be provided to authenticate against the DataBroker.
+     */
+    var jsonWebToken: JsonWebToken? = null
+
+    private val coroutineStub: VALGrpcKt.VALCoroutineStub = VALGrpcKt.VALCoroutineStub(managedChannel)
 
     /**
      * Gets the latest value of a [signalId].
@@ -79,11 +67,18 @@ class CoroutineBrokerGrpcFacade(
      *    NOT_FOUND if the requested signal doesn't exist
      *    PERMISSION_DENIED if access is denied
      */
-    suspend fun getValue(signalId: SignalID): GetValueResponse {
+    suspend fun fetchValue(signalId: Types.SignalID): KuksaValV2.GetValueResponse {
         val request = getValueRequest {
             this.signalId = signalId
         }
-        return coroutineStub.getValue(request)
+
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .getValue(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -94,12 +89,18 @@ class CoroutineBrokerGrpcFacade(
      *    NOT_FOUND if any of the requested signals doesn't exist.
      *    PERMISSION_DENIED if access is denied for any of the requested signals.
      */
-    suspend fun getValues(signalIds: List<SignalID>): GetValuesResponse {
+    suspend fun fetchValues(signalIds: List<Types.SignalID>): KuksaValV2.GetValuesResponse {
         val request = getValuesRequest {
             this.signalIds.addAll(signalIds)
         }
 
-        return coroutineStub.getValues(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .getValues(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -115,7 +116,13 @@ class CoroutineBrokerGrpcFacade(
             this.signalIds.addAll(signalIds)
         }
 
-        return coroutineStub.subscribeById(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .subscribeById(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -130,12 +137,18 @@ class CoroutineBrokerGrpcFacade(
      */
     fun subscribe(
         signalPaths: List<String>,
-    ): Flow<SubscribeResponse> {
+    ): Flow<KuksaValV2.SubscribeResponse> {
         val request = subscribeRequest {
             this.signalPaths.addAll(signalPaths)
         }
 
-        return coroutineStub.subscribe(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .subscribe(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -149,12 +162,19 @@ class CoroutineBrokerGrpcFacade(
      *        - if the data type used in the request does not match the data type of the addressed signal
      *        - if the requested value is not accepted, e.g. if sending an unsupported enum value
      */
-    suspend fun actuate(signalId: SignalID): ActuateResponse {
+    suspend fun actuate(signalId: Types.SignalID, value: Value): KuksaValV2.ActuateResponse {
         val request = actuateRequest {
             this.signalId = signalId
+            this.value = value
         }
 
-        return coroutineStub.actuate(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .actuate(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -171,17 +191,24 @@ class CoroutineBrokerGrpcFacade(
      *         - if the requested value is not accepted, e.g. if sending an unsupported enum value
      *
      */
-    suspend fun batchActuate(signalIds: List<SignalID>): BatchActuateResponse {
+    suspend fun batchActuate(signalIds: List<Types.SignalID>, value: Value): KuksaValV2.BatchActuateResponse {
         val request = batchActuateRequest {
             signalIds.forEach { signalId ->
                 val actuateRequest = actuateRequest {
                     this.signalId = signalId
+                    this.value = value
                 }
                 this.actuateRequests.add(actuateRequest)
             }
         }
 
-        return coroutineStub.batchActuate(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .batchActuate(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -195,13 +222,19 @@ class CoroutineBrokerGrpcFacade(
     suspend fun listMetadata(
         root: String,
         filter: String,
-    ): ListMetadataResponse {
+    ): KuksaValV2.ListMetadataResponse {
         val request = listMetadataRequest {
             this.root = root
             this.filter = filter
         }
 
-        return coroutineStub.listMetadata(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .listMetadata(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -217,15 +250,21 @@ class CoroutineBrokerGrpcFacade(
      *        - if the published value is not accepted e.g. if sending an unsupported enum value
      */
     suspend fun publishValue(
-        signalId: SignalID,
-        datapoint: Datapoint,
-    ): PublishValueResponse {
+        signalId: Types.SignalID,
+        datapoint: Types.Datapoint,
+    ): KuksaValV2.PublishValueResponse {
         val request = publishValueRequest {
             this.signalId = signalId
             this.dataPoint = datapoint
         }
 
-        return coroutineStub.publishValue(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .publishValue(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
@@ -238,17 +277,29 @@ class CoroutineBrokerGrpcFacade(
      *  Errors are communicated as messages in the stream.
      */
     fun openProviderStream(
-        streamRequestFlow: Flow<OpenProviderStreamRequest>,
-    ): Flow<OpenProviderStreamResponse> {
-        return coroutineStub.openProviderStream(streamRequestFlow)
+        streamRequestFlow: Flow<KuksaValV2.OpenProviderStreamRequest>,
+    ): Flow<KuksaValV2.OpenProviderStreamResponse> {
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .openProviderStream(streamRequestFlow)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 
     /**
      * Gets the server information.
      */
-    suspend fun getServerInfo(): GetServerInfoResponse {
+    suspend fun fetchServerInfo(): KuksaValV2.GetServerInfoResponse {
         val request = getServerInfoRequest { }
 
-        return coroutineStub.getServerInfo(request)
+        return try {
+            coroutineStub
+                .withAuthenticationInterceptor(jsonWebToken)
+                .getServerInfo(request)
+        } catch (e: StatusException) {
+            throw DataBrokerException(e.message, e)
+        }
     }
 }

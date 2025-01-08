@@ -20,6 +20,9 @@ plugins {
 }
 
 interface PublishPluginExtension {
+    val artifactGroup: Property<String>
+    val artifactName: Property<String>
+    val artifactVersion: Property<String>
     val mavenPublicationName: Property<String>
     val componentName: Property<String>
     val description: Property<String>
@@ -52,9 +55,12 @@ afterEvaluate {
         publications {
             register<MavenPublication>(extension.mavenPublicationName.get()) {
                 from(components[extension.componentName.get()])
+                groupId = extension.artifactGroup.getOrElse(project.group.toString())
+                artifactId = extension.artifactName.getOrElse(project.name)
+                version = extension.artifactVersion.getOrElse(project.version.toString())
 
                 pom {
-                    name = "${project.group}:${project.name}"
+                    name = "$groupId:$artifactId"
                     description = extension.description.get()
                     url = "https://github.com/eclipse-velocitas/vehicle-app-java-sdk"
                     licenses {

@@ -7,8 +7,67 @@ This project is in incubation status. Not all required functionality might be mi
 ## Overview
 
 The Velocitas Vehicle App Java SDK provides functionality to ease the implementation of Automotive
-Java Applications. 
+Java Applications.
 
+## Databroker Interaction
+
+build.gradle.kts
+```kotlin
+dependencies {
+    implementation("org.eclipse.kuksa:vss-core:<VERSION>")
+    implementation("org.eclipse.velocitas:vehicle-app-java-sdk:<VERSION>")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:<VERSION>")
+}
+```
+
+Using protocol kuksa.val.v1:
+
+```kotlin
+    val managedChannel = ManagedChannelBuilder.forAddress("localhost", 55555)
+        .usePlaintext()
+        .build()
+    val dataBrokerConnector = DataBrokerConnector(managedChannel)
+
+    coroutineScope {
+        launch {
+            val dataBrokerConnection = dataBrokerConnector.connect()
+
+            println("Using protocol kuksa.val.v1")
+            println("Setting Vehicle.Speed in Databroker to 80")
+            val vssPath = "Vehicle.Speed"
+
+            val dataPoint = Datapoint.newBuilder().setFloat(80.0F).build()
+            val updateRequest = UpdateRequest(vssPath, dataPoint)
+            dataBrokerConnection.update(updateRequest)
+
+            println("Reading Vehicle.Speed from Databroker")
+            val fetchRequest = FetchRequest(vssPath)
+            val response = dataBrokerConnection.fetch(fetchRequest)
+            println("GetResponse: " + response)
+
+            println("Observe Vehicle.Speed")
+            val subscribeRequest = SubscribeRequest("Vehicle.Speed")
+            dataBrokerConnection.subscribe(
+                subscribeRequest,
+                object : VssPathListener {
+                    override fun onEntryChanged(entryUpdates: List<KuksaValV1.EntryUpdate>) {
+                        entryUpdates.forEach { entryUpdate ->
+                            val vehicleSpeedValue = entryUpdate.entry.value.float
+                            // handle change
+                            println("newSpeed(v1): $vehicleSpeedValue")
+                        }
+                    }
+
+                    override fun onError(throwable: Throwable) {
+                        // handle error
+                    }
+                }
+            )
+        }
+    }
+```
+
+Using protocol kuksa.val.v2
 
 ## VSS Model Generation
 
@@ -87,4 +146,50 @@ data class VssSpeed @JvmOverloads constructor(
     override val parentClass: KClass<*>
         get() = VssVehicle::class
 }
+```
+
+*Using the Vehicle Model to interact with the Databroker*
+
+> [!IMPORTANT]
+> The Vehicle Model only supports kuksa.val.v1 protocol
+
+```kotlin
+    val managedChannel = ManagedChannelBuilder.forAddress("localhost", 55555)
+        .usePlaintext()
+        .build()
+    val dataBrokerConnector = DataBrokerConnector(managedChannel)
+
+    coroutineScope {
+        launch {
+            val dataBrokerConnection = dataBrokerConnector.connect()
+
+            println("Using protocol kuksa.val.v1 with VehicleModel")
+            println("Setting Vehicle.Speed in Databroker to 100")
+            val vssSpeedWithValue = VssVehicle.VssSpeed(100.0F)
+            val updateRequest = VssNodeUpdateRequest(vssSpeedWithValue)
+            dataBrokerConnection.update(updateRequest)
+
+            println("Reading Vehicle.Speed from Databroker")
+            val vssSpeed = VssVehicle.VssSpeed()
+            val fetchRequest = VssNodeFetchRequest(vssSpeed)
+            val response = dataBrokerConnection.fetch(fetchRequest)
+            println("VssSpeed: " + response)
+
+            println("Observe Vehicle.Speed")
+            val subscribeRequest = VssNodeSubscribeRequest(vssSpeed)
+            dataBrokerConnection.subscribe(
+                subscribeRequest,
+                object : VssNodeListener<VssVehicle.VssSpeed> {
+                    override fun onError(throwable: Throwable) {
+                        // handle error
+                    }
+
+                    override fun onNodeChanged(vssNode: VssVehicle.VssSpeed) {
+                        // handle VssSpeed change
+                        println("newSpeed(VehicleModel): $vssNode")
+                    }
+                }
+            )
+        }
+    }
 ```

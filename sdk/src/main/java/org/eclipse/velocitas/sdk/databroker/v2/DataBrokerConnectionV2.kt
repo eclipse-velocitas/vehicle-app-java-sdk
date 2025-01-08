@@ -14,64 +14,49 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.eclipse.velocitas.sdk.grpc
+package org.eclipse.velocitas.sdk.databroker.v2
 
-import com.google.common.util.concurrent.ListenableFuture
-import io.grpc.ChannelCredentials
-import io.grpc.Grpc
-import io.grpc.InsecureChannelCredentials
+import kotlin.properties.Delegates
+import kotlinx.coroutines.flow.Flow
+import io.grpc.ConnectivityState
 import io.grpc.ManagedChannel
-import io.grpc.stub.StreamObserver
+import org.eclipse.kuksa.connectivity.authentication.JsonWebToken
+import org.eclipse.kuksa.connectivity.databroker.listener.DisconnectListener
+import org.eclipse.kuksa.pattern.listener.MultiListener
 import org.eclipse.kuksa.proto.v2.KuksaValV2
-import org.eclipse.kuksa.proto.v2.KuksaValV2.ActuateResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.BatchActuateResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetServerInfoResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetValueResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.GetValuesResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.ListMetadataResponse
-import org.eclipse.kuksa.proto.v2.KuksaValV2.OpenProviderStreamRequest
-import org.eclipse.kuksa.proto.v2.KuksaValV2.PublishValueResponse
-import org.eclipse.kuksa.proto.v2.Types.Datapoint
-import org.eclipse.kuksa.proto.v2.Types.SignalID
-import org.eclipse.kuksa.proto.v2.VALGrpc
-import org.eclipse.kuksa.proto.v2.actuateRequest
-import org.eclipse.kuksa.proto.v2.batchActuateRequest
-import org.eclipse.kuksa.proto.v2.getServerInfoRequest
-import org.eclipse.kuksa.proto.v2.getValueRequest
-import org.eclipse.kuksa.proto.v2.getValuesRequest
-import org.eclipse.kuksa.proto.v2.listMetadataRequest
-import org.eclipse.kuksa.proto.v2.publishValueRequest
-import org.eclipse.kuksa.proto.v2.subscribeByIdRequest
-import org.eclipse.kuksa.proto.v2.subscribeRequest
+import org.eclipse.kuksa.proto.v2.Types
+import org.eclipse.kuksa.proto.v2.Types.Value
 import org.eclipse.velocitas.sdk.logging.Logger
 
-private const val TAG = "AsyncBrokerGrpcFacade"
+class DataBrokerConnectionV2 internal constructor(
+    private val managedChannel: ManagedChannel,
+    private val dataBrokerTransporter: DataBrokerTransporterV2 = DataBrokerTransporterV2(managedChannel),
+) {
+    /**
+     * Used to register and unregister multiple [DisconnectListener].
+     */
+    val disconnectListeners = MultiListener<DisconnectListener>()
 
-/**
- * AsyncBrokerGrpcFacade provides asynchronous communication against the VehicleDataBroker. Asynchronous communication
- * is provided using a ListenableFuture object, resp. an asynchronous observer callback in case of subscribe methods.
- * The current implementation uses the 'kuksa.val.v2' protocol which can be found here:
- * https://github.com/eclipse-kuksa/kuksa-databroker/tree/main/proto/kuksa/val/v2.
- */
-@Suppress("TooManyFunctions")
-class AsyncBrokerGrpcFacade(
-    host: String,
-    port: Int,
-    channelCredentials: ChannelCredentials = InsecureChannelCredentials.create(),
-) : GrpcClient {
-    private val channel: ManagedChannel = Grpc.newChannelBuilderForAddress(
-        host,
-        port,
-        channelCredentials,
-    ).build()
-
-    private val futureStub = VALGrpc.newFutureStub(channel)
-
-    private val asyncStub = VALGrpc.newStub(channel)
+    /**
+     * A JsonWebToken can be provided to authenticate against the DataBroker.
+     */
+    var jsonWebToken: JsonWebToken? by Delegates.observable(null) { _, _, newValue ->
+        dataBrokerTransporter.jsonWebToken = newValue
+    }
 
     init {
-        Logger.info(TAG, "Connecting to gRPC service at $host:$port")
-        channel.getState(true)
+        val state = managedChannel.getState(false)
+        managedChannel.notifyWhenStateChanged(state) {
+            val newState = managedChannel.getState(false)
+            Logger.debug("", "DataBrokerConnection state changed: $newState")
+            if (newState != ConnectivityState.SHUTDOWN) {
+                managedChannel.shutdownNow()
+            }
+
+            disconnectListeners.forEach { listener ->
+                listener.onDisconnect()
+            }
+        }
     }
 
     /**
@@ -81,11 +66,8 @@ class AsyncBrokerGrpcFacade(
      *    NOT_FOUND if the requested signal doesn't exist
      *    PERMISSION_DENIED if access is denied
      */
-    fun getValue(signalId: SignalID): ListenableFuture<GetValueResponse> {
-        val request = getValueRequest {
-            this.signalId = signalId
-        }
-        return futureStub.getValue(request)
+    suspend fun fetchValue(signalId: Types.SignalID): KuksaValV2.GetValueResponse {
+        return dataBrokerTransporter.fetchValue(signalId)
     }
 
     /**
@@ -96,12 +78,8 @@ class AsyncBrokerGrpcFacade(
      *    NOT_FOUND if any of the requested signals doesn't exist.
      *    PERMISSION_DENIED if access is denied for any of the requested signals.
      */
-    fun getValues(signalIds: List<SignalID>): ListenableFuture<GetValuesResponse> {
-        val request = getValuesRequest {
-            this.signalIds.addAll(signalIds)
-        }
-
-        return futureStub.getValues(request)
+    suspend fun fetchValues(signalIds: List<Types.SignalID>): KuksaValV2.GetValuesResponse {
+        return dataBrokerTransporter.fetchValues(signalIds)
     }
 
     /**
@@ -112,13 +90,8 @@ class AsyncBrokerGrpcFacade(
      */
     fun subscribeById(
         signalIds: List<Int>,
-        responseObserver: StreamObserver<KuksaValV2.SubscribeByIdResponse>,
-    ) {
-        val request = subscribeByIdRequest {
-            this.signalIds.addAll(signalIds)
-        }
-
-        asyncStub.subscribeById(request, responseObserver)
+    ): Flow<KuksaValV2.SubscribeByIdResponse> {
+        return dataBrokerTransporter.subscribeById(signalIds)
     }
 
     /**
@@ -133,13 +106,8 @@ class AsyncBrokerGrpcFacade(
      */
     fun subscribe(
         signalPaths: List<String>,
-        responseObserver: StreamObserver<KuksaValV2.SubscribeResponse>,
-    ) {
-        val request = subscribeRequest {
-            this.signalPaths.addAll(signalPaths)
-        }
-
-        asyncStub.subscribe(request, responseObserver)
+    ): Flow<KuksaValV2.SubscribeResponse> {
+        return dataBrokerTransporter.subscribe(signalPaths)
     }
 
     /**
@@ -153,12 +121,8 @@ class AsyncBrokerGrpcFacade(
      *        - if the data type used in the request does not match the data type of the addressed signal
      *        - if the requested value is not accepted, e.g. if sending an unsupported enum value
      */
-    fun actuate(signalId: SignalID): ListenableFuture<ActuateResponse> {
-        val request = actuateRequest {
-            this.signalId = signalId
-        }
-
-        return futureStub.actuate(request)
+    suspend fun actuate(signalId: Types.SignalID, value: Value): KuksaValV2.ActuateResponse {
+        return dataBrokerTransporter.actuate(signalId, value)
     }
 
     /**
@@ -175,17 +139,8 @@ class AsyncBrokerGrpcFacade(
      *         - if the requested value is not accepted, e.g. if sending an unsupported enum value
      *
      */
-    fun batchActuate(signalIds: List<SignalID>): ListenableFuture<BatchActuateResponse> {
-        val request = batchActuateRequest {
-            signalIds.forEach { signalId ->
-                val actuateRequest = actuateRequest {
-                    this.signalId = signalId
-                }
-                this.actuateRequests.add(actuateRequest)
-            }
-        }
-
-        return futureStub.batchActuate(request)
+    suspend fun batchActuate(signalIds: List<Types.SignalID>, value: Value): KuksaValV2.BatchActuateResponse {
+        return dataBrokerTransporter.batchActuate(signalIds, value)
     }
 
     /**
@@ -196,16 +151,11 @@ class AsyncBrokerGrpcFacade(
      * The server might respond with the following GRPC error codes:
      *     NOT_FOUND if the specified root branch does not exist.
      */
-    fun listMetadata(
+    suspend fun listMetadata(
         root: String,
         filter: String,
-    ): ListenableFuture<ListMetadataResponse> {
-        val request = listMetadataRequest {
-            this.root = root
-            this.filter = filter
-        }
-
-        return futureStub.listMetadata(request)
+    ): KuksaValV2.ListMetadataResponse {
+        return dataBrokerTransporter.listMetadata(root, filter)
     }
 
     /**
@@ -220,16 +170,11 @@ class AsyncBrokerGrpcFacade(
      *        - if the data type used in the request does not match the data type of the addressed signal
      *        - if the published value is not accepted e.g. if sending an unsupported enum value
      */
-    fun publishValue(
-        signalId: SignalID,
-        datapoint: Datapoint,
-    ): ListenableFuture<PublishValueResponse> {
-        val request = publishValueRequest {
-            this.signalId = signalId
-            this.dataPoint = datapoint
-        }
-
-        return futureStub.publishValue(request)
+    suspend fun publishValue(
+        signalId: Types.SignalID,
+        datapoint: Types.Datapoint,
+    ): KuksaValV2.PublishValueResponse {
+        return dataBrokerTransporter.publishValue(signalId, datapoint)
     }
 
     /**
@@ -242,17 +187,15 @@ class AsyncBrokerGrpcFacade(
      *  Errors are communicated as messages in the stream.
      */
     fun openProviderStream(
-        responseObserver: StreamObserver<KuksaValV2.OpenProviderStreamResponse>,
-    ): StreamObserver<OpenProviderStreamRequest> {
-        return asyncStub.openProviderStream(responseObserver)
+        streamRequestFlow: Flow<KuksaValV2.OpenProviderStreamRequest>,
+    ): Flow<KuksaValV2.OpenProviderStreamResponse> {
+        return dataBrokerTransporter.openProviderStream(streamRequestFlow)
     }
 
     /**
      * Gets the server information.
      */
-    fun getServerInfo(): ListenableFuture<GetServerInfoResponse> {
-        val request = getServerInfoRequest { }
-
-        return futureStub.getServerInfo(request)
+    suspend fun fetchServerInfo(): KuksaValV2.GetServerInfoResponse {
+        return dataBrokerTransporter.fetchServerInfo()
     }
 }

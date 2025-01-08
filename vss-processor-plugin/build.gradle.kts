@@ -44,15 +44,15 @@ version = semanticVersion.versionName
 group = "org.eclipse.kuksa"
 
 gradlePlugin {
-    website.set("https://github.com/eclipse-kuksa/kuksa-android-sdk")
-    vcsUrl.set("https://github.com/eclipse-kuksa/kuksa-android-sdk")
+    website.set("https://github.com/eclipse-velocitas/vehicle-app-java-sdk")
+    vcsUrl.set("https://github.com/eclipse-velocitas/vehicle-app-java-sdk.git")
 
     plugins {
         create("VssProcessorPlugin") {
             id = "org.eclipse.velocitas.vss-processor-plugin"
             implementationClass = "org.eclipse.velocitas.vssprocessor.plugin.VssProcessorPlugin"
             displayName = "VSS Processor Plugin"
-            tags.set(listOf("KUKSA", "Vehicle Signal Specification", "VSS", "Android", "Kotlin"))
+            tags.set(listOf("Velocitas", "Vehicle Signal Specification", "VSS", "Android", "Kotlin"))
             description = pluginDescription
         }
     }
@@ -81,7 +81,7 @@ afterEvaluate {
                     pom {
                         name = "${project.group}:${project.name}"
                         description = pluginDescription
-                        url = "https://github.com/eclipse-kuksa/kuksa-android-sdk"
+                        url = "https://github.com/eclipse-velocitas/vehicle-app-java-sdk"
                         licenses {
                             license {
                                 name.set("The Apache Software License, Version 2.0")
@@ -96,12 +96,6 @@ afterEvaluate {
                                 organizationUrl.set("https://www.etas.com")
                             }
                             developer {
-                                name.set("Sebastian Schildt")
-                                email.set("sebastian.schildt@etas.com")
-                                organization.set("ETAS GmbH")
-                                organizationUrl.set("https://www.etas.com")
-                            }
-                            developer {
                                 name.set("Andre Weber")
                                 email.set("andre.weber3@etas.com")
                                 organization.set("ETAS GmbH")
@@ -109,9 +103,11 @@ afterEvaluate {
                             }
                         }
                         scm {
-                            connection.set("scm:git:github.com/eclipse-kuksa/kuksa-android-sdk.git")
-                            developerConnection.set("scm:git:ssh://github.com/eclipse-kuksa/kuksa-android-sdk.git")
-                            url.set("https://github.com/eclipse-kuksa/kuksa-android-sdk/tree/main")
+                            connection.set("scm:git:github.com/eclipse-velocitas/vehicle-app-java-sdk.git")
+                            developerConnection.set(
+                                "scm:git:ssh://github.com/eclipse-velocitas/vehicle-app-java-sdk.git",
+                            )
+                            url.set("https://github.com/eclipse-velocitas/vehicle-app-java-sdk/tree/main")
                         }
                     }
                 }
@@ -167,7 +163,6 @@ afterEvaluate {
 // IMPORTANT: The currently used dependencies here are already covered by the other modules in this project so dash oss
 // scripts do not have to be included here (yet).
 // But keep in mind to check the coverage when adding new dependencies.
-// TODO: Automated with https://github.com/eclipse-kuksa/kuksa-android-sdk/issues/79
 dependencies {
     implementation(kotlin("stdlib"))
 

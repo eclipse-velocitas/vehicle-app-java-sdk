@@ -14,6 +14,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import org.eclipse.velocitas.version.SemanticVersion
+import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_PATH_KEY
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -22,6 +24,19 @@ plugins {
     alias(libs.plugins.protobuf)
     alias(libs.plugins.dokka)
     ktlint
+    publish
+}
+
+val versionPath = rootProject.ext[VERSION_FILE_DEFAULT_PATH_KEY] as String
+val semanticVersion = SemanticVersion(versionPath)
+version = semanticVersion.versionName
+group = "org.eclipse.velocitas"
+
+publish {
+    artifactName = "vehicle-app-java-sdk"
+    mavenPublicationName = "release"
+    componentName = "java"
+    description = "Velocitas Vehicle App SDK for Java."
 }
 
 tasks.register("javadocJar", Jar::class) {
@@ -90,6 +105,9 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+    api("org.eclipse.kuksa:kuksa-java-sdk:0.3.1-SNAPSHOT") {
+        isChanging = true
+    }
     implementation(libs.kotlinx.coroutines.core)
 
     implementation(libs.grpc.okhttp)
