@@ -36,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vehicle-app-kotlin-template
+          name: vehicle-app-java-sdk
           include-hidden-files: true
           path: |
             ./**
