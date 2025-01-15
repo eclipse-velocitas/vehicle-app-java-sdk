@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id("java-library")
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.protobuf)
     alias(libs.plugins.dokka)
     ktlint
     publish
@@ -61,43 +60,6 @@ kotlin {
     }
 }
 
-protobuf {
-    protoc {
-        artifact = libs.protoc.asProvider().get().toString()
-    }
-    plugins {
-        create("java") {
-            artifact = libs.protoc.gen.grpc.java.get().toString()
-        }
-        create("grpc") {
-            artifact = libs.protoc.gen.grpc.java.get().toString()
-        }
-        create("grpckt") {
-            artifact = libs.protoc.gen.grpc.kotlin.get().toString() + ":jdk8@jar"
-        }
-    }
-    generateProtoTasks {
-        all().forEach {
-            it.builtins {
-                named("java") {
-                    option("lite")
-                }
-                create("kotlin") {
-                    option("lite")
-                }
-            }
-            it.plugins {
-                create("grpc") {
-                    option("lite")
-                }
-                create("grpckt") {
-                    option("lite")
-                }
-            }
-        }
-    }
-}
-
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     // required to manipulate the environment vars in tests
@@ -109,13 +71,6 @@ dependencies {
         isChanging = true
     }
     implementation(libs.kotlinx.coroutines.core)
-
-    implementation(libs.grpc.okhttp)
-    implementation(libs.grpc.protobuf.lite)
-    implementation(libs.grpc.stub)
-    implementation(libs.grpc.kotlin.stub)
-
-    implementation(libs.protobuf.kotlin.lite)
 
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
