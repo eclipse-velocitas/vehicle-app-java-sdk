@@ -24,6 +24,7 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
 symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
+kuksa-java-sdk = { group = "org.eclipse.kuksa", name = "kuksa-java-sdk", version = "0.3.1" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

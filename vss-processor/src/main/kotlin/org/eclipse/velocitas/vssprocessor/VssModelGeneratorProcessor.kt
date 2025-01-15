@@ -186,7 +186,7 @@ class VssModelGeneratorProcessor(
     }
 
     private companion object {
-        private const val PACKAGE_NAME = "org.eclipse.kuksa.vss"
+        private const val PACKAGE_NAME = "org.eclipse.velocitas.vss"
         private const val FILE_NAME_PROCESSOR_POSTFIX = "Processor"
         private const val KSP_INPUT_BUILD_DIRECTORY = "kspInput"
         private const val BUILD_FOLDER_NAME = "build"

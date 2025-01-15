@@ -67,9 +67,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api("org.eclipse.kuksa:kuksa-java-sdk:0.3.1-SNAPSHOT") {
-        isChanging = true
-    }
+    api(libs.kuksa.java.sdk)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.junit.jupiter.api)

@@ -33,7 +33,7 @@ version = semanticVersion.versionName
 group = "org.eclipse.velocitas"
 
 dependencies {
-    implementation("org.eclipse.kuksa:vss-core:0.2.1")
+    implementation(libs.kuksa.java.sdk)
 
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))

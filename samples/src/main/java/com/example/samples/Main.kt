@@ -36,8 +36,8 @@ import org.eclipse.kuksa.proto.v1.KuksaValV1
 import org.eclipse.kuksa.proto.v1.Types.Datapoint
 import org.eclipse.kuksa.proto.v2.Types
 import org.eclipse.kuksa.proto.v2.Types.SignalID
-import org.eclipse.kuksa.vss.VssVehicle
 import org.eclipse.kuksa.vsscore.annotation.VssModelGenerator
+import org.eclipse.velocitas.vss.VssVehicle
 
 @VssModelGenerator
 class Main
