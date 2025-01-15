@@ -14,7 +14,6 @@ Java Applications.
 build.gradle.kts
 ```kotlin
 dependencies {
-    implementation("org.eclipse.kuksa:vss-core:<VERSION>")
     implementation("org.eclipse.velocitas:vehicle-app-java-sdk:<VERSION>")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:<VERSION>")
 }
@@ -43,7 +42,7 @@ Using protocol kuksa.val.v1:
             println("Reading Vehicle.Speed from Databroker")
             val fetchRequest = FetchRequest(vssPath)
             val response = dataBrokerConnection.fetch(fetchRequest)
-            println("GetResponse: " + response)
+            println("GetResponse: $response")
 
             println("Observe Vehicle.Speed")
             val subscribeRequest = SubscribeRequest("Vehicle.Speed")
@@ -53,15 +52,14 @@ Using protocol kuksa.val.v1:
                     override fun onEntryChanged(entryUpdates: List<KuksaValV1.EntryUpdate>) {
                         entryUpdates.forEach { entryUpdate ->
                             val vehicleSpeedValue = entryUpdate.entry.value.float
-                            // handle change
-                            println("newSpeed(v1): $vehicleSpeedValue")
+                            // handle changes
                         }
                     }
 
                     override fun onError(throwable: Throwable) {
                         // handle error
                     }
-                }
+                },
             )
         }
     }
@@ -69,6 +67,42 @@ Using protocol kuksa.val.v1:
 
 Using protocol kuksa.val.v2
 
+```kotlin
+    val managedChannel = ManagedChannelBuilder.forAddress("localhost", 55556)
+        .usePlaintext()
+        .build()
+    val dataBrokerConnector = DataBrokerConnectorV2(managedChannel)
+
+    coroutineScope {
+        launch {
+            val dataBrokerConnection = dataBrokerConnector.connect()
+
+            println("Using protocol kuksa.val.v2")
+            println("Setting Vehicle.Speed in Databroker to 60")
+
+            val signalId = SignalID.newBuilder().setPath("Vehicle.Speed").build()
+            val speedValue = Types.Value.newBuilder().setFloat(60.0F).build()
+            val datapoint = Types.Datapoint.newBuilder().setValue(speedValue).build()
+            val publishValueRequest = PublishValueRequestV2(signalId, datapoint)
+
+            dataBrokerConnection.publishValue(publishValueRequest)
+
+            println("Reading Vehicle.Speed from Databroker")
+            val fetchValueRequest = FetchValueRequestV2(signalId)
+            val response = dataBrokerConnection.fetchValue(fetchValueRequest)
+            println("FetchValueResponse: $response")
+
+            println("Observe Vehicle.Speed")
+            val signalPaths = listOf("Vehicle.Speed")
+            val subscribeRequest = SubscribeRequestV2(signalPaths)
+            val responseFlow = dataBrokerConnection.subscribe(subscribeRequest)
+            responseFlow.collect { response ->
+                val vehicleSpeedValue = response.entriesMap["Vehicle.Speed"]?.value?.float
+                // handle changes
+            }
+        }
+    }
+```
 ## VSS Model Generation
 
 Velocitas provides the tooling to generate Model files from a Vehicle Signal Specification to allow a more convenient 
@@ -151,7 +185,7 @@ data class VssSpeed @JvmOverloads constructor(
 *Using the Vehicle Model to interact with the Databroker*
 
 > [!IMPORTANT]
-> The Vehicle Model only supports kuksa.val.v1 protocol
+> The Vehicle Model only supports the kuksa.val.v1 protocol
 
 ```kotlin
     val managedChannel = ManagedChannelBuilder.forAddress("localhost", 55555)
@@ -173,7 +207,7 @@ data class VssSpeed @JvmOverloads constructor(
             val vssSpeed = VssVehicle.VssSpeed()
             val fetchRequest = VssNodeFetchRequest(vssSpeed)
             val response = dataBrokerConnection.fetch(fetchRequest)
-            println("VssSpeed: " + response)
+            println("VssSpeed: $response")
 
             println("Observe Vehicle.Speed")
             val subscribeRequest = VssNodeSubscribeRequest(vssSpeed)
@@ -185,10 +219,9 @@ data class VssSpeed @JvmOverloads constructor(
                     }
 
                     override fun onNodeChanged(vssNode: VssVehicle.VssSpeed) {
-                        // handle VssSpeed change
-                        println("newSpeed(VehicleModel): $vssNode")
+                        // handle changes
                     }
-                }
+                },
             )
         }
     }

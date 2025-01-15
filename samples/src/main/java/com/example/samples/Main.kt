@@ -19,22 +19,25 @@ package com.example.samples
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import io.grpc.ManagedChannelBuilder
-import org.eclipse.kuksa.connectivity.databroker.DataBrokerConnector
-import org.eclipse.kuksa.connectivity.databroker.listener.VssNodeListener
-import org.eclipse.kuksa.connectivity.databroker.listener.VssPathListener
-import org.eclipse.kuksa.connectivity.databroker.request.FetchRequest
-import org.eclipse.kuksa.connectivity.databroker.request.SubscribeRequest
-import org.eclipse.kuksa.connectivity.databroker.request.UpdateRequest
-import org.eclipse.kuksa.connectivity.databroker.request.VssNodeFetchRequest
-import org.eclipse.kuksa.connectivity.databroker.request.VssNodeSubscribeRequest
-import org.eclipse.kuksa.connectivity.databroker.request.VssNodeUpdateRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.DataBrokerConnector
+import org.eclipse.kuksa.connectivity.databroker.v1.listener.VssNodeListener
+import org.eclipse.kuksa.connectivity.databroker.v1.listener.VssPathListener
+import org.eclipse.kuksa.connectivity.databroker.v1.request.FetchRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.request.SubscribeRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.request.UpdateRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.request.VssNodeFetchRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.request.VssNodeSubscribeRequest
+import org.eclipse.kuksa.connectivity.databroker.v1.request.VssNodeUpdateRequest
+import org.eclipse.kuksa.connectivity.databroker.v2.DataBrokerConnectorV2
+import org.eclipse.kuksa.connectivity.databroker.v2.request.FetchValueRequestV2
+import org.eclipse.kuksa.connectivity.databroker.v2.request.PublishValueRequestV2
+import org.eclipse.kuksa.connectivity.databroker.v2.request.SubscribeRequestV2
 import org.eclipse.kuksa.proto.v1.KuksaValV1
 import org.eclipse.kuksa.proto.v1.Types.Datapoint
 import org.eclipse.kuksa.proto.v2.Types
 import org.eclipse.kuksa.proto.v2.Types.SignalID
 import org.eclipse.kuksa.vss.VssVehicle
 import org.eclipse.kuksa.vsscore.annotation.VssModelGenerator
-import org.eclipse.velocitas.sdk.databroker.v2.DataBrokerConnectorV2
 
 @VssModelGenerator
 class Main
@@ -66,7 +69,7 @@ private suspend fun useVehicleModel() {
             val vssSpeed = VssVehicle.VssSpeed()
             val fetchRequest = VssNodeFetchRequest(vssSpeed)
             val response = dataBrokerConnection.fetch(fetchRequest)
-            println("VssSpeed: " + response)
+            println("VssSpeed: $response")
 
             println("Observe Vehicle.Speed")
             val subscribeRequest = VssNodeSubscribeRequest(vssSpeed)
@@ -109,7 +112,7 @@ private suspend fun useKuksaValV1() {
             println("Reading Vehicle.Speed from Databroker")
             val fetchRequest = FetchRequest(vssPath)
             val response = dataBrokerConnection.fetch(fetchRequest)
-            println("GetResponse: " + response)
+            println("GetResponse: $response")
 
             println("Observe Vehicle.Speed")
             val subscribeRequest = SubscribeRequest("Vehicle.Speed")
@@ -150,15 +153,19 @@ private suspend fun useKuksaValV2() {
             val signalId = SignalID.newBuilder().setPath("Vehicle.Speed").build()
             val speedValue = Types.Value.newBuilder().setFloat(60.0F).build()
             val datapoint = Types.Datapoint.newBuilder().setValue(speedValue).build()
-            dataBrokerConnection.publishValue(signalId, datapoint)
+            val publishValueRequest = PublishValueRequestV2(signalId, datapoint)
+
+            dataBrokerConnection.publishValue(publishValueRequest)
 
             println("Reading Vehicle.Speed from Databroker")
-            val response = dataBrokerConnection.fetchValue(signalId)
-            println(response)
+            val fetchValueRequest = FetchValueRequestV2(signalId)
+            val response = dataBrokerConnection.fetchValue(fetchValueRequest)
+            println("FetchValueResponse: $response")
 
             println("Observe Vehicle.Speed")
             val signalPaths = listOf("Vehicle.Speed")
-            val responseFlow = dataBrokerConnection.subscribe(signalPaths)
+            val subscribeRequest = SubscribeRequestV2(signalPaths)
+            val responseFlow = dataBrokerConnection.subscribe(subscribeRequest)
             responseFlow.collect { response ->
                 val vehicleSpeedValue = response.entriesMap["Vehicle.Speed"]?.value?.float
                 // handle change
