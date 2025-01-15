@@ -15,6 +15,8 @@
  */
 
 pluginManagement {
+    includeBuild("vss-processor-plugin")
+
     repositories {
         google {
             content {
@@ -32,8 +34,14 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("https://oss.sonatype.org/content/repositories/releases/")
+        }
     }
 }
 
 rootProject.name = "vehicle-app-java-sdk"
 include(":sdk")
+include(":vss-processor")
+include(":test-core")
+include(":samples")
