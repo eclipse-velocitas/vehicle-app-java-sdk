@@ -51,7 +51,7 @@ gradlePlugin {
             id = "org.eclipse.velocitas.vss-processor-plugin"
             implementationClass = "org.eclipse.velocitas.vssprocessor.plugin.VssProcessorPlugin"
             displayName = "VSS Processor Plugin"
-            tags.set(listOf("Velocitas", "Vehicle Signal Specification", "VSS", "Java", "Android", "Kotlin"))
+            tags.set(listOf("Velocitas", "Vehicle Signal Specification", "VSS", "Java", "Kotlin"))
             description = pluginDescription
         }
     }
