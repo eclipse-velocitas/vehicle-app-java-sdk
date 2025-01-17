@@ -105,10 +105,11 @@ Using protocol kuksa.val.v2
 ```
 ## VSS Model Generation
 
-Velocitas provides the tooling to generate Model files from a Vehicle Signal Specification to allow a more convenient 
-usage you can opt in to auto generate Kotlin models via [Symbol Processing](https://kotlinlang.org/docs/ksp-quickstart.html)
-of the same specification the Databroker uses. For starters you can retrieve an extensive default specification from the
-release page of the [COVESA Vehicle Signal Specification GitHub repository](https://github.com/COVESA/vehicle_signal_specification/releases).
+Velocitas provides the vss-processor-plugin Gradle Plugin to generate Model files from a Vehicle Signal Specification.
+Using the VSS Models allows a more convenient usage over using the VSS Paths. However as of now native support for
+VSS Models only exist for kuksa.val.v1 protocol. Support for kuksa.val.v2 will follow later. For starters you can
+retrieve an extensive default specification from the release page of the
+[COVESA Vehicle Signal Specification GitHub repository](https://github.com/COVESA/vehicle_signal_specification/releases).
 
 Currently VSS specification files in .yaml and .json format are supported by the vss-processor.
 
