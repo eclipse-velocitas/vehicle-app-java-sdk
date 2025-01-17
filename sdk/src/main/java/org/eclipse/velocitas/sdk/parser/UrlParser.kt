@@ -37,7 +37,6 @@ class UrlParser {
      */
     fun parse(url: String): Result {
         var scheme = ""
-        var netLocation = ""
 
         var schemeLen = url.indexOf(simplifiedSchemeSeparator)
         if (schemeLen > -1) {
@@ -57,7 +56,7 @@ class UrlParser {
         if (netLocationLen == -1) {
             netLocationLen = url.length
         }
-        netLocation = url.substring(startOfSchemePart, netLocationLen)
+        val netLocation = url.substring(startOfSchemePart, netLocationLen)
 
         return Result(scheme, netLocation)
     }

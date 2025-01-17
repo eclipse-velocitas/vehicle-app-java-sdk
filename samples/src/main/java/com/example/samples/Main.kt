@@ -36,11 +36,7 @@ import org.eclipse.kuksa.proto.v1.KuksaValV1
 import org.eclipse.kuksa.proto.v1.Types.Datapoint
 import org.eclipse.kuksa.proto.v2.Types
 import org.eclipse.kuksa.proto.v2.Types.SignalID
-import org.eclipse.kuksa.vsscore.annotation.VssModelGenerator
 import org.eclipse.velocitas.vss.VssVehicle
-
-@VssModelGenerator
-class Main
 
 suspend fun main() {
     useVehicleModel()
@@ -159,8 +155,8 @@ private suspend fun useKuksaValV2() {
 
             println("Reading Vehicle.Speed from Databroker")
             val fetchValueRequest = FetchValueRequestV2(signalId)
-            val response = dataBrokerConnection.fetchValue(fetchValueRequest)
-            println("FetchValueResponse: $response")
+            val fetchResponse = dataBrokerConnection.fetchValue(fetchValueRequest)
+            println("FetchValueResponse: $fetchResponse")
 
             println("Observe Vehicle.Speed")
             val signalPaths = listOf("Vehicle.Speed")

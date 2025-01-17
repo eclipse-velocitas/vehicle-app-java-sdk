@@ -19,11 +19,10 @@
 
 package org.eclipse.velocitas.vssprocessor.spec
 
-import com.google.devtools.ksp.processing.SymbolProcessor
 import com.squareup.kotlinpoet.TypeSpec
 
 /**
- * Is used by the [SymbolProcessor] to generate a class spec which can be written into a file.
+ * Is used by the to generate a class spec which can be written into a file.
  */
 internal interface SpecModel<T : SpecModel<T>> {
     /**

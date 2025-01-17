@@ -67,7 +67,7 @@ enum class VssDataType(
          * [stringRepresentation]s.
          */
         fun find(stringRepresentation: String): VssDataType {
-            return entries.find { it.stringRepresentation == stringRepresentation } ?: UNKNOWN
+            return values().find { it.stringRepresentation == stringRepresentation } ?: UNKNOWN
         }
     }
 }

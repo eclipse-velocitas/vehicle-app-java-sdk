@@ -10,7 +10,7 @@ kotest = "5.7.2"
 mockk = "1.13.7"
 gson = "2.10.1"
 kotlinpoet = "1.16.0"
-symbolProcessingApi = "1.9.22-1.0.17"
+kuksa-java-sdk = "0.3.1"
 
 [libraries]
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junitJupiter" }
@@ -22,9 +22,8 @@ kotest = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "ko
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
-kotlinpoet-ksp = { module = "com.squareup:kotlinpoet-ksp", version.ref = "kotlinpoet" }
-symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
-kuksa-java-sdk = { group = "org.eclipse.kuksa", name = "kuksa-java-sdk", version = "0.3.1" }
+kuksa-vss-core = { group = "org.eclipse.kuksa", name = "vss-core", version.ref = "kuksa-java-sdk" }
+kuksa-java-sdk = { group = "org.eclipse.kuksa", name = "kuksa-java-sdk", version.ref = "kuksa-java-sdk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

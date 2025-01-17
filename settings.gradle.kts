@@ -42,6 +42,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "vehicle-app-java-sdk"
 include(":sdk")
-include(":vss-processor")
 include(":test-core")
 include(":samples")

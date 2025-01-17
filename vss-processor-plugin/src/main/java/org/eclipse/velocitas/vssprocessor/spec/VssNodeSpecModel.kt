@@ -19,7 +19,6 @@ package org.eclipse.velocitas.vssprocessor.spec
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.declaredMemberProperties
-import com.google.devtools.ksp.processing.KSPLogger
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
@@ -44,6 +43,7 @@ import org.eclipse.kuksa.vsscore.model.parentKey
 import org.eclipse.kuksa.vsscore.model.variableName
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.*
 import org.eclipse.velocitas.vssprocessor.spec.VssNodeProperty.*
+import org.gradle.api.logging.Logger
 
 internal class VssNodeSpecModel(
     override var vssPath: String = "",
@@ -58,7 +58,7 @@ internal class VssNodeSpecModel(
     override val comment: String = propertyNameToNodePropertyMap[COMMENT]?.value ?: ""
     val datatype: String = propertyNameToNodePropertyMap[DATATYPE]?.value ?: ""
 
-    var logger: KSPLogger? = null
+    var logger: Logger? = null
 
     private val stringTypeName = String::class.asTypeName()
     private val vssNodeSetTypeName = Set::class.parameterizedBy(VssNode::class)

@@ -59,7 +59,7 @@ internal class YamlVssParser(private val elementDelimiter: String = "") : VssPar
                 }
             }
         } catch (e: FileParseException) {
-            throw IOException("Invalid VSS File: '${vssFile.path}'", e)
+            throw IOException("Invalid VSS File: '${vssFile.path}: ${e.message}'")
         }
 
         return vssNodeElements
@@ -79,9 +79,7 @@ internal class YamlVssParser(private val elementDelimiter: String = "") : VssPar
             .substringAfter(delimiter) // Remove vssPath (already parsed)
             .prependIndent(delimiter.toString()) // So the parsing is consistent for the first element
 
-        val uuid = fetchValue(UUID, yamlElementJoined, delimiter).ifEmpty {
-            throw FileParseException("Could not parse '${UUID.key}' for '$vssPath'")
-        }
+        val uuid = fetchValue(UUID, yamlElementJoined, delimiter).ifEmpty { "" }
 
         val type = fetchValue(TYPE, yamlElementJoined, delimiter).ifEmpty {
             throw FileParseException("Could not parse '${TYPE.key}' for '$vssPath'")

@@ -115,12 +115,7 @@ Currently VSS specification files in .yaml and .json format are supported by the
 *app/build.gradle.kts*
 ```kotlin
 plugins {
-    id("com.google.devtools.ksp") version "<VERSION>"
     id("org.eclipse.velocitas.vss-processor-plugin") version "<VERSION>"
-}
-
-dependencies {
-    ksp("org.eclipse.velocitas:vss-processor:<VERSION>")
 }
 
 // Optional - See plugin documentation. Files inside the "$rootDir/vss" folder are used automatically.
@@ -129,15 +124,11 @@ vssProcessor {
 }
 ```
 
-Use the [`VssModelGenerator`](https://github.com/eclipse-kuksa/kuksa-android-sdk/blob/main/vss-core/src/main/java/org/eclipse/kuksa/vsscore/annotation/VssModelGenerator.kt) annotation.
 Doing so will generate a complete tree of Kotlin models which can be used in combination with the SDK API. This way you can
 work with safe types and the SDK takes care of all the model parsing for you. There is also a whole set of
 convenience operators and extension methods to work with to manipulate the tree data. See the `VssNode` class documentation for this.
+The generated code can be found in the folder: `<PROJECT>/build/generated/vss/kotlin`.
 
-```kotlin / Java
-@VssModelGenerator 
-class Main
-```
 > [!IMPORTANT]
 > Keep in mind to always synchronize a compatible (e.g. subset) VSS file between the client and the Databroker.
 

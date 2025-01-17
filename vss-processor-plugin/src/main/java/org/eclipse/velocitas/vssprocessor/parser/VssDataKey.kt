@@ -37,7 +37,7 @@ enum class VssDataKey {
 
     companion object {
         fun findByKey(key: String): VssDataKey? {
-            return entries.find { it.key == key }
+            return values().find { it.key == key }
         }
     }
 }

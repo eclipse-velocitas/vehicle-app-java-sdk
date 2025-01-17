@@ -27,16 +27,15 @@ plugins {
 }
 
 // TODO: This linking to the version file currently throws a warning:
-// Caught exception: Already watching path: kuksa-android-sdk/vss-processor-plugin/..
+// Caught exception: Already watching path: vehicle-app-java-sdk/vss-processor-plugin/..
 //
 // The reason is that two different root projects (main + composite (this)) are referencing to the same version.txt
 // file because data models like SemanticVersion can't be shared. However the same build folder is used for the
 // caching so the cache does not know about this. The issue will be ignored as a warning for now.
 //
 // Similar issue: https://github.com/gradle/gradle/issues/27940
-val pluginDescription = "Vehicle Signal Specification (VSS) Plugin of the KUKSA SDK. This is used in combination " +
-    "with the KSP processor component 'KUKSA VSS Processor'. The plugin is configured to provide " +
-    "VSS Files to KSP processor. This is mandatory to use the 'KUKSA VSS Processor' component."
+val pluginDescription = "Vehicle Signal Specification (VSS) Plugin of the Velocitas Vehicle App Java SDK. " +
+    "The plugin reads all VSS files and generates kotlin classes for each entry."
 
 val versionPath = "$rootDir/../$VERSION_FILE_DEFAULT_NAME"
 val semanticVersion = SemanticVersion(versionPath)
@@ -52,7 +51,7 @@ gradlePlugin {
             id = "org.eclipse.velocitas.vss-processor-plugin"
             implementationClass = "org.eclipse.velocitas.vssprocessor.plugin.VssProcessorPlugin"
             displayName = "VSS Processor Plugin"
-            tags.set(listOf("Velocitas", "Vehicle Signal Specification", "VSS", "Android", "Kotlin"))
+            tags.set(listOf("Velocitas", "Vehicle Signal Specification", "VSS", "Java", "Android", "Kotlin"))
             description = pluginDescription
         }
     }
@@ -164,7 +163,16 @@ afterEvaluate {
 // scripts do not have to be included here (yet).
 // But keep in mind to check the coverage when adding new dependencies.
 dependencies {
+    implementation(libs.kuksa.vss.core)
+
     implementation(kotlin("stdlib"))
+    implementation(kotlin("reflect"))
+
+    implementation(libs.gson)
+    implementation(libs.kotlinpoet)
+
+    testImplementation(libs.kotest)
+    testImplementation(libs.mockk)
 
     testImplementation(gradleTestKit())
     testImplementation(libs.kotest)

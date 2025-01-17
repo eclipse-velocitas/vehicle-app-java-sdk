@@ -20,8 +20,8 @@
 package org.eclipse.velocitas.vssprocessor.plugin
 
 import java.io.File
-import java.io.FileNotFoundException
 import javax.inject.Inject
+import org.eclipse.velocitas.vssprocessor.VssModelGenerator
 import org.gradle.api.DefaultTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -35,11 +35,10 @@ import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
+import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskAction
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.register
-import org.gradle.kotlin.dsl.withType
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
@@ -57,8 +56,8 @@ internal constructor(objectFactory: ObjectFactory) {
 private val fileSeparator = File.separator
 
 /**
- * This Plugin searches for compatible VSS files and copies them into an input folder for the
- * KSP VSS Processor. This is necessary because the Symbol Processor does not have access to the android assets folder.
+ * This Plugin searches for compatible VSS files, generates VSS Model classes and copies them into an output folder
+ * which is added as a main sourceSet.
  */
 class VssProcessorPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -66,44 +65,30 @@ class VssProcessorPlugin : Plugin<Project> {
 
         // The extension variables are only available after the project has been evaluated
         project.afterEvaluate {
-            val buildDir = layout.buildDirectory.asFile.get()
-            val buildDirPath = buildDir.absolutePath
-            val vssDir = "${rootDir}${fileSeparator}$VSS_FOLDER_NAME"
+            val vssModelGenerator = VssModelGenerator(project, logger)
 
-            val provideVssFilesTask =
-                project.tasks.register<ProvideVssFilesTask>(PROVIDE_VSS_FILES_TASK_NAME) {
-                    val searchPath = extension.searchPath.get().ifEmpty { vssDir }
-                    val vssFilePath = StringBuilder(buildDirPath)
-                        .append(fileSeparator)
-                        .append(KSP_INPUT_BUILD_DIRECTORY)
-                        .append(fileSeparator)
-                        .toString()
-                    val vssFile = File(vssFilePath)
+            val sourceSets = project.extensions.getByType(SourceSetContainer::class.java)
+            val mainSourceSet = sourceSets.getByName("main")
+            mainSourceSet.java.srcDirs(vssModelGenerator.sourceSetBasePath)
 
-                    logger.info("Searching directory $searchPath for VSS definitions")
+            val generateVssModelsTask = project.tasks.register<GenerateVssModelsTask>("generateVssModels") {
+                val defaultVssPath = "${rootDir}${fileSeparator}$VSS_FOLDER_NAME"
+                val vssPath = extension.searchPath.get().ifEmpty { defaultVssPath }
+                val vssDir = File(vssPath)
+                inputDir.set(vssDir)
 
-                    val searchDir = file(searchPath)
-                    if (!searchDir.exists()) {
-                        throw FileNotFoundException(
-                            "Directory '$searchPath' for VSS files not found! Please create the folder relative to " +
-                                "your project directory: ${searchDir.path}.",
-                        )
-                    }
+                val genOutputDir = File(vssModelGenerator.outputPath)
+                outputDir.set(genOutputDir)
+            }
 
-                    inputDir.set(searchDir)
-                    outputDir.set(vssFile)
-                }
-
-            tasks.withType<JavaCompile> {
-                dependsOn(provideVssFilesTask.get())
+            tasks.getByName("compileKotlin") {
+                dependsOn(generateVssModelsTask.get())
             }
         }
     }
 
     companion object {
-        private const val KSP_INPUT_BUILD_DIRECTORY = "kspInput"
         private const val EXTENSION_NAME = "vssProcessor"
-        private const val PROVIDE_VSS_FILES_TASK_NAME = "provideVssFiles"
         private const val VSS_FOLDER_NAME = "vss"
     }
 }
@@ -113,7 +98,7 @@ class VssProcessorPlugin : Plugin<Project> {
  * output directory [outputDir] where all files are copied to so the VSSProcessor can work with them.
  */
 @CacheableTask
-private abstract class ProvideVssFilesTask : DefaultTask() {
+private abstract class GenerateVssModelsTask : DefaultTask() {
     @get:Incremental
     @get:IgnoreEmptyDirectories
     @get:PathSensitive(PathSensitivity.NAME_ONLY)
@@ -122,6 +107,8 @@ private abstract class ProvideVssFilesTask : DefaultTask() {
 
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
+
+    private val vssModelGenerator = VssModelGenerator(project, logger)
 
     @TaskAction
     fun provideFile(inputChanges: InputChanges) {
@@ -141,9 +128,24 @@ private abstract class ProvideVssFilesTask : DefaultTask() {
             when (change.changeType) {
                 ChangeType.ADDED,
                 ChangeType.MODIFIED,
-                -> file.copyTo(targetFile, true)
+                -> {
+                    val outputDir = outputDir.asFile.get()
+                    outputDir.deleteRecursively()
+                    outputDir.mkdirs()
 
-                ChangeType.REMOVED -> targetFile.delete()
+                    val vssFiles = inputDir.asFile.get()
+                        .walk()
+                        .filter { it.isFile }
+                        .filter { validVssExtension.contains(it.extension) }
+                        .toSet()
+                    if (vssFiles.isEmpty()) {
+                        logger.error("No VSS files were found! Is the plugin correctly configured?")
+                    }
+
+                    vssModelGenerator.generate(vssFiles)
+                }
+
+                ChangeType.REMOVED -> outputDir.asFile.get().deleteRecursively()
                 else -> logger.warn("Could not determine file change type: ${change.changeType}")
             }
         }
