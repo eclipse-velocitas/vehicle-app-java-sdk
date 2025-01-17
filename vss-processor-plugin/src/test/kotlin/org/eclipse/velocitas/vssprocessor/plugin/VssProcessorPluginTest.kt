@@ -24,6 +24,7 @@ import kotlin.io.path.pathString
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
+import org.eclipse.velocitas.kotest.Functional
 import org.eclipse.velocitas.vssprocessor.plugin.generator.project.GradleProject.Companion.TEST_FOLDER_NAME_DEFAULT
 import org.eclipse.velocitas.vssprocessor.plugin.generator.project.VssProcessorLibProject
 import org.eclipse.velocitas.vssprocessor.plugin.generator.project.VssProcessorPluginProject

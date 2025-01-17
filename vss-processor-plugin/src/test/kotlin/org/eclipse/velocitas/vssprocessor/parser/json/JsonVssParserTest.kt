@@ -22,12 +22,14 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.types.instanceOf
-import org.eclipse.velocitas.test.TestResourceFile
+import org.eclipse.velocitas.TestResourceFile
+import org.eclipse.velocitas.kotest.Unit
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.MAX
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.MIN
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.UNIT
 
 class JsonVssParserTest : BehaviorSpec({
+    tags(Unit)
 
     given("A JsonDefinitionParser") {
         val classUnderTest = JsonVssParser()

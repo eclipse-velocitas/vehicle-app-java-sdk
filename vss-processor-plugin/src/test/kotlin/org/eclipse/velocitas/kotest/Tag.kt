@@ -17,22 +17,19 @@
  *
  */
 
-package org.eclipse.velocitas.test.kotest
+package org.eclipse.velocitas.kotest
 
-import kotlin.time.Duration.Companion.seconds
-import io.kotest.assertions.nondeterministic.continuallyConfig
-import io.kotest.assertions.nondeterministic.eventuallyConfig
-import io.kotest.core.config.AbstractProjectConfig
+import io.kotest.core.NamedTag
 
-val eventuallyConfiguration = eventuallyConfig {
-    duration = 1.seconds
-}
+val Integration = NamedTag("Integration")
 
-val continuallyConfiguration = continuallyConfig<Any> {
-    duration = 1.seconds
-}
+val InsecureDataBroker = NamedTag("InsecureDataBroker") // no tls, no authentication
+val Insecure = NamedTag("Insecure")
 
-// https://kotest.io/docs/framework/project-config.html
-object KotestProjectConfig : AbstractProjectConfig() {
-    override var displayFullTestPath: Boolean? = true
-}
+val SecureDataBroker = NamedTag("SecureDataBroker")
+val Secure = NamedTag("Secure") // tls enabled, authentication enabled
+val Authentication = NamedTag("Authentication")
+val Tls = NamedTag("Tls")
+
+val Unit = NamedTag("Unit")
+val Functional = NamedTag("Functional")

@@ -18,8 +18,11 @@ package org.eclipse.velocitas.sdk.parser
 
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
+import org.eclipse.velocitas.kotest.Unit
 
 class UrlParserTest : BehaviorSpec({
+    tags(Unit)
+
     context("Parsing NetLocation and Scheme") {
         val urlParser = UrlParser()
 

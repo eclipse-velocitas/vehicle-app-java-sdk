@@ -18,10 +18,13 @@ package org.eclipse.velocitas.sdk.logging
 
 import io.kotest.core.config.LogLevel
 import io.kotest.core.spec.style.BehaviorSpec
+import org.eclipse.velocitas.kotest.Unit
 
 private const val TAG = "LoggerTest"
 
 class LoggerTest : BehaviorSpec({
+    tags(Unit)
+
     Logger.loggingStrategy = StringLoggingStrategy
 
     given("An errorMessage w/o arguments") {

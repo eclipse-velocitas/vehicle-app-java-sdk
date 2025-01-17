@@ -23,6 +23,7 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
+import org.eclipse.velocitas.kotest.Unit
 
 private const val DATATYPE_ANY = "any"
 private const val DATATYPE_STRING = "string"
@@ -37,6 +38,8 @@ private const val DATATYPE_UINT64_ARRAY = "uint64[]"
 private const val DATATYPE_INVALID = "invalid"
 
 class VssNodeSpecModelTest : BehaviorSpec({
+    tags(Unit)
+
     given("String spec model") {
         val vssNodeProperties = createNodePropertiesBuilder()
             .withDataType(DATATYPE_STRING)

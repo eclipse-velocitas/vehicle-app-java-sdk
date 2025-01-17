@@ -108,6 +108,15 @@ subprojects {
         }
     }
 
+    // see: https://kotest.io/docs/framework/tags.html#gradle
+    tasks.withType<Test> {
+        val systemPropertiesMap = HashMap<String, Any>()
+        System.getProperties().forEach { key, value ->
+            systemPropertiesMap[key.toString()] = value.toString()
+        }
+        systemProperties = systemPropertiesMap
+    }
+
     // https://docs.gradle.org/current/userguide/dependency_locking.html
     dependencyLocking {
         lockAllConfigurations()

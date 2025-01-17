@@ -14,10 +14,21 @@
  * limitations under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
+ *
  */
 
-package org.eclipse.velocitas.vssprocessor.plugin
+package org.eclipse.velocitas.kotest
 
 import io.kotest.core.NamedTag
 
-val Functional = NamedTag("Functional")
+val Integration = NamedTag("Integration")
+
+val InsecureDataBroker = NamedTag("InsecureDataBroker") // no tls, no authentication
+val Insecure = NamedTag("Insecure")
+
+val SecureDataBroker = NamedTag("SecureDataBroker")
+val Secure = NamedTag("Secure") // tls enabled, authentication enabled
+val Authentication = NamedTag("Authentication")
+val Tls = NamedTag("Tls")
+
+val Unit = NamedTag("Unit")

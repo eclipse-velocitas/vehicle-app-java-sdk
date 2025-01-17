@@ -20,10 +20,12 @@ import java.io.File
 import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.instanceOf
+import org.eclipse.velocitas.kotest.Unit
 import org.eclipse.velocitas.vssprocessor.parser.json.JsonVssParser
 import org.eclipse.velocitas.vssprocessor.parser.yaml.YamlVssParser
 
 class VssParserFactoryTest : BehaviorSpec({
+    tags(Unit)
 
     given("An instance of VssParserFactory") {
         val classUnderTest = VssParserFactory()

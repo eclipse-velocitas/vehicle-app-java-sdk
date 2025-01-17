@@ -21,12 +21,15 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
-import org.eclipse.velocitas.test.TestResourceFile
+import org.eclipse.velocitas.TestResourceFile
+import org.eclipse.velocitas.kotest.Unit
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.MAX
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.MIN
 import org.eclipse.velocitas.vssprocessor.parser.VssDataKey.UNIT
 
 class YamlVssParserTest : BehaviorSpec({
+    tags(Unit)
+
     given("A parser for yaml files") {
         val parser = YamlVssParser()
 
