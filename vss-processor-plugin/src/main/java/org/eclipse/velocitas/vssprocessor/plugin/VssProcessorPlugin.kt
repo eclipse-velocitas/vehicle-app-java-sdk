@@ -71,7 +71,7 @@ class VssProcessorPlugin : Plugin<Project> {
             val mainSourceSet = sourceSets.getByName("main")
             mainSourceSet.java.srcDirs(vssModelGenerator.sourceSetBasePath)
 
-            val generateVssModelsTask = project.tasks.register<GenerateVssModelsTask>("generateVssModels") {
+            val generateVssModelsTask = project.tasks.register<GenerateVssModelsTask>(GENERATE_TASK_NAME) {
                 val defaultVssPath = "${rootDir}${fileSeparator}$VSS_FOLDER_NAME"
                 val vssPath = extension.searchPath.get().ifEmpty { defaultVssPath }
                 val vssDir = File(vssPath)
@@ -81,7 +81,7 @@ class VssProcessorPlugin : Plugin<Project> {
                 outputDir.set(genOutputDir)
             }
 
-            tasks.getByName("compileKotlin") {
+            tasks.getByName(COMPILE_KOTLIN_TASK_NAME) {
                 dependsOn(generateVssModelsTask.get())
             }
         }
@@ -90,6 +90,8 @@ class VssProcessorPlugin : Plugin<Project> {
     companion object {
         private const val EXTENSION_NAME = "vssProcessor"
         private const val VSS_FOLDER_NAME = "vss"
+        private const val GENERATE_TASK_NAME = "generateVssModels"
+        private const val COMPILE_KOTLIN_TASK_NAME = "compileKotlin"
     }
 }
 
@@ -108,7 +110,9 @@ private abstract class GenerateVssModelsTask : DefaultTask() {
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
-    private val vssModelGenerator = VssModelGenerator(project, logger)
+    private val vssModelGenerator by lazy {
+        VssModelGenerator(project, logger)
+    }
 
     @TaskAction
     fun provideFile(inputChanges: InputChanges) {
@@ -140,6 +144,7 @@ private abstract class GenerateVssModelsTask : DefaultTask() {
                         .toSet()
                     if (vssFiles.isEmpty()) {
                         logger.error("No VSS files were found! Is the plugin correctly configured?")
+                        return@forEach
                     }
 
                     vssModelGenerator.generate(vssFiles)
