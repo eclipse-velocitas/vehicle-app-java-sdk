@@ -74,13 +74,13 @@ class VssProcessorPluginTest : BehaviorSpec({
                     pluginProject.refresh() // So the plugin project does not have 2 :lib includes
                 }
 
-                `when`("the provideVssFiles task is executed without correct input") {
+                `when`("the generateVssModels task is executed without correct input") {
                     val result = gradleRunner
-                        .withArguments(PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments(GENERATE_VSS_MODELS_TASK_NAME)
                         .buildAndFail()
 
                     then("it should throw an Exception") {
-                        result.output shouldContain "Could not create task ':lib:provideVssFiles'"
+                        result.output shouldContain "Could not create task ':lib:generateVssModels'"
                     }
                 }
             }
@@ -103,46 +103,46 @@ class VssProcessorPluginTest : BehaviorSpec({
 
                 pluginProject.add(vssProcessorProject)
 
-                `when`("the provideVssFiles task is executed with build cache the #1 time") {
+                `when`("the generateVssModels task is executed with build cache the #1 time") {
                     pluginProject.localCacheFolder.deleteRecursively()
 
                     val result = gradleRunner
-                        .withArguments("clean", "--build-cache", PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments("clean", "--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
 
-                    println("ProvideVssFilesTask + Build Cache #1 output: ${result.output}")
+                    println("generateVssModelsTask + Build Cache #1 output: ${result.output}")
 
                     then("it should build successfully") {
-                        val outcome = result.task(":lib:$PROVIDE_VSS_FILES_TASK_NAME")?.outcome
+                        val outcome = result.task(":lib:$GENERATE_VSS_MODELS_TASK_NAME")?.outcome
 
                         outcome shouldBe TaskOutcome.SUCCESS
                     }
                 }
 
-                `when`("the provideVssFiles task is executed with build cache the #2 time") {
+                `when`("the generateVssModels task is executed with build cache the #2 time") {
                     val result = gradleRunner
-                        .withArguments("clean", "--build-cache", PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments("clean", "--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
 
-                    println("ProvideVssFilesTask + Build Cache #2 output: ${result.output}")
+                    println("generateVssModelsTask + Build Cache #2 output: ${result.output}")
 
                     then("it should build from cache") {
-                        val outcome = result.task(":lib:$PROVIDE_VSS_FILES_TASK_NAME")?.outcome
+                        val outcome = result.task(":lib:$GENERATE_VSS_MODELS_TASK_NAME")?.outcome
 
                         outcome shouldBe TaskOutcome.FROM_CACHE
                     }
                 }
 
-                `when`("the provideVssFiles task is executed with build cache the #3 time") {
+                `when`("the generateVssModels task is executed with build cache the #3 time") {
                     val kspInputDir = vssProcessorProject.buildDir.resolve(KSP_INPUT_BUILD_DIRECTORY)
                     val result = gradleRunner
-                        .withArguments("--build-cache", PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments("--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
 
-                    println("ProvideVssFilesTask + Build Cache #3 output: ${result.output}")
+                    println("generateVssModelsTask + Build Cache #3 output: ${result.output}")
 
                     then("it should be up to date") {
-                        val outcome = result.task(":lib:$PROVIDE_VSS_FILES_TASK_NAME")?.outcome
+                        val outcome = result.task(":lib:$GENERATE_VSS_MODELS_TASK_NAME")?.outcome
 
                         outcome shouldBe TaskOutcome.UP_TO_DATE
                     }
@@ -154,7 +154,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     }
                 }
 
-                `when`("the input of the ProvideVssFilesTask changes") {
+                `when`("the input of the generateVssModelsTask changes") {
                     val projectVssDir2 = vssDir2Path.substringAfter(TEST_FOLDER_NAME_DEFAULT)
                     vssProcessorProject.generate(
                         """
@@ -165,28 +165,28 @@ class VssProcessorPluginTest : BehaviorSpec({
                     )
 
                     val result = gradleRunner
-                        .withArguments("--build-cache", PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments("--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
 
-                    println("ProvideVssFilesTask + Build Cache #4 output: ${result.output}")
+                    println("generateVssModelsTask + Build Cache #4 output: ${result.output}")
 
                     then("it should build successfully") {
-                        val outcome = result.task(":lib:$PROVIDE_VSS_FILES_TASK_NAME")?.outcome
+                        val outcome = result.task(":lib:$GENERATE_VSS_MODELS_TASK_NAME")?.outcome
 
                         outcome shouldBe TaskOutcome.SUCCESS
                     }
                 }
 
-                `when`("the name of the input of the ProvideVssFilesTask changes") {
+                `when`("the name of the input of the generateVssModelsTask changes") {
                     vssFile2.renameTo(File("$vssDir2Path/vss_rel_4.0_test_renamed.yml"))
                     val result = gradleRunner
-                        .withArguments("--build-cache", PROVIDE_VSS_FILES_TASK_NAME)
+                        .withArguments("--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
 
-                    println("ProvideVssFilesTask + Build Cache #5 output: ${result.output}")
+                    println("generateVssModelsTask + Build Cache #5 output: ${result.output}")
 
                     then("it should build successfully") {
-                        val outcome = result.task(":lib:$PROVIDE_VSS_FILES_TASK_NAME")?.outcome
+                        val outcome = result.task(":lib:$GENERATE_VSS_MODELS_TASK_NAME")?.outcome
 
                         outcome shouldBe TaskOutcome.SUCCESS
                     }
@@ -197,9 +197,9 @@ class VssProcessorPluginTest : BehaviorSpec({
 }) {
     companion object {
         private const val VSS_TEST_FILE_NAME = "vss_rel_4.0_test.yaml"
-        private const val PROVIDE_VSS_FILES_TASK_NAME = "provideVssFiles"
+        private const val GENERATE_VSS_MODELS_TASK_NAME = "generateVssModels"
         private const val VSS_TEST_FILE_MINIMAL_NAME = "vss_rel_4.0_test_minimal.yaml"
-        private const val GRADLE_VERSION_TEST = "8.6"
+        private const val GRADLE_VERSION_TEST = "8.7"
         private const val KSP_INPUT_BUILD_DIRECTORY = "kspInput"
     }
 }

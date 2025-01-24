@@ -28,7 +28,7 @@ class VssProcessorPluginProject : RootGradleProject("VssProcessorPlugin") {
         settingsFile.writeText(
             """
                 pluginManagement {
-                    includeBuild("../../../vss-processor-plugin")
+                    includeBuild("../../")
 
                     repositories {
                         gradlePluginPortal()
