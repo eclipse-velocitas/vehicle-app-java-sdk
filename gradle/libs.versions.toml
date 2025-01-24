@@ -24,6 +24,8 @@ gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref = "kotlinpoet" }
 kuksa-vss-core = { group = "org.eclipse.kuksa", name = "vss-core", version.ref = "kuksa-java-sdk" }
 kuksa-java-sdk = { group = "org.eclipse.kuksa", name = "kuksa-java-sdk", version.ref = "kuksa-java-sdk" }
+android-application-gradle-plugin = { group = "com.android.application", name = "com.android.application.gradle.plugin", version.ref = "agp" }
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

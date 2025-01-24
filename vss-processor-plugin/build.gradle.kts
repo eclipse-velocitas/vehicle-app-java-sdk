@@ -165,14 +165,14 @@ afterEvaluate {
 dependencies {
     implementation(libs.kuksa.vss.core)
 
+    implementation(libs.android.application.gradle.plugin)
+    implementation(libs.kotlin.gradle.plugin)
+
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
 
     implementation(libs.gson)
     implementation(libs.kotlinpoet)
-
-    testImplementation(libs.kotest)
-    testImplementation(libs.mockk)
 
     testImplementation(gradleTestKit())
     testImplementation(libs.kotest)
