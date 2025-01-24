@@ -42,4 +42,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "vehicle-app-java-sdk"
 include(":sdk")
-include(":samples")
+include(":samples:android-app")
+include(":samples:android-lib")
+include(":samples:java-app")
+include(":samples:java-lib")
