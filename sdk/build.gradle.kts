@@ -14,14 +14,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import org.eclipse.velocitas.version.SemanticVersion
+import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_PATH_KEY
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("java-library")
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.protobuf)
     alias(libs.plugins.dokka)
     ktlint
+    publish
+}
+
+val versionPath = rootProject.ext[VERSION_FILE_DEFAULT_PATH_KEY] as String
+val semanticVersion = SemanticVersion(versionPath)
+version = semanticVersion.versionName
+group = "org.eclipse.velocitas"
+
+publish {
+    artifactName = "vehicle-app-java-sdk"
+    mavenPublicationName = "release"
+    componentName = "java"
+    description = "Velocitas Vehicle App SDK for Java."
 }
 
 tasks.register("javadocJar", Jar::class) {
@@ -46,43 +60,6 @@ kotlin {
     }
 }
 
-protobuf {
-    protoc {
-        artifact = libs.protoc.asProvider().get().toString()
-    }
-    plugins {
-        create("java") {
-            artifact = libs.protoc.gen.grpc.java.get().toString()
-        }
-        create("grpc") {
-            artifact = libs.protoc.gen.grpc.java.get().toString()
-        }
-        create("grpckt") {
-            artifact = libs.protoc.gen.grpc.kotlin.get().toString() + ":jdk8@jar"
-        }
-    }
-    generateProtoTasks {
-        all().forEach {
-            it.builtins {
-                named("java") {
-                    option("lite")
-                }
-                create("kotlin") {
-                    option("lite")
-                }
-            }
-            it.plugins {
-                create("grpc") {
-                    option("lite")
-                }
-                create("grpckt") {
-                    option("lite")
-                }
-            }
-        }
-    }
-}
-
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
     // required to manipulate the environment vars in tests
@@ -90,16 +67,12 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
+    api(libs.kuksa.java.sdk) {
+        exclude("org.apache.tomcat", "annotations-api")
+    }
     implementation(libs.kotlinx.coroutines.core)
 
-    implementation(libs.grpc.okhttp)
-    implementation(libs.grpc.protobuf.lite)
-    implementation(libs.grpc.stub)
-    implementation(libs.grpc.kotlin.stub)
-
-    implementation(libs.protobuf.kotlin.lite)
-
+    implementation(libs.kotest)
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
-    testImplementation(libs.kotest.runner.junit5)
 }

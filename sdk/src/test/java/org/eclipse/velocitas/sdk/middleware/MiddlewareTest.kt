@@ -20,8 +20,11 @@ import io.kotest.core.spec.style.BehaviorSpec
 import io.kotest.extensions.system.withEnvironment
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import org.eclipse.velocitas.kotest.Unit
 
 class MiddlewareTest : BehaviorSpec({
+    tags(Unit)
+
     val middlewareFactory = MiddlewareFactory()
 
     context("Middleware.getInstance() returns NativeMiddleware per default") {

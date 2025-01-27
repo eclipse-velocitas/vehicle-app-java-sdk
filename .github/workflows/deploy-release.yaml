@@ -1,0 +1,37 @@
+name: Deploy Release SDK
+
+concurrency: production
+
+on:
+  push:
+    tags:
+      - 'release/v*'
+
+jobs:
+  deployment:
+    if: github.repository == 'eclipse-velocitas/vehicle-app-java-sdk'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Project
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set Release Version
+        run: ./gradlew setReleaseVersion # Do not chain this command because it writes into a file which needs to be re-read inside the next gradle command
+
+      - name: Publish Library
+        env:
+          ORG_GPG_KEY_ID: ${{ secrets.GPG_SUBKEY_ID }}
+          ORG_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          ORG_OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        run: ./gradlew publishAllPublicationsToOSSRHReleaseRepository
