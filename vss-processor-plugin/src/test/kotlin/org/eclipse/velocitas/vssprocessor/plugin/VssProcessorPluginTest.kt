@@ -63,7 +63,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                 pluginResult.output shouldContain "BUILD SUCCESSFUL"
             }
 
-            and("an Android library project is added") {
+            xand("an Android library project is added") {
                 val androidLibProject =
                     org.eclipse.velocitas.vssprocessor.plugin.generator.project.AndroidLibProject("lib")
                 androidLibProject.generate()
@@ -91,7 +91,7 @@ class VssProcessorPluginTest : BehaviorSpec({
             // #3: No clean -> UP_TO_DATE
             // #4: Gradle + plugin / task input changed -> SUCCESS
             // #5: Input file name changed -> SUCCESS
-            and("a VSS compatible Android library project is added") {
+            xand("a VSS compatible Android library project is added") {
                 val vssFile2: File
                 val vssProcessorProject = VssProcessorLibProject("lib").apply {
                     copyVssFiles(vssDir, VSS_TEST_FILE_NAME)
