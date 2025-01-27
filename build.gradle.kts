@@ -104,7 +104,6 @@ subprojects {
     }
     afterEvaluate {
         tasks.findByName("check")?.finalizedBy(rootProject.tasks.named("detekt"))
-
     }
 
     // see: https://kotest.io/docs/framework/tags.html#gradle
