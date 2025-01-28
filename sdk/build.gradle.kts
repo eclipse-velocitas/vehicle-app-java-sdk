@@ -76,3 +76,38 @@ dependencies {
     testImplementation(libs.junit.jupiter.api)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }
+
+// Tasks for included composite builds need to be called separately. For convenience sake we depend on the most used
+// tasks. Every task execution of this project will then be forwarded to the included build project. Since this module
+// is hard coupled to the
+//
+// We have to manually define the task names because the task() method of the included build throws an error for any
+// unknown task.
+//
+// WARNING: Do not depend on the task "clean" here: https://github.com/gradle/gradle/issues/23585
+val dependentCompositeTasks = setOf(
+    "publishToMavenLocal",
+    "publishToSonatype",
+    "test",
+)
+val dependentCompositeBuilds = setOf("vss-processor-plugin")
+
+gradle.projectsEvaluated {
+    val subProjectTasks = tasks + subprojects.flatMap { it.tasks }
+
+    println("Linking Composite Tasks:")
+
+    subProjectTasks
+        .filter { dependentCompositeTasks.contains(it.name) }
+        .forEach { task ->
+            val compositeTask = gradle.includedBuilds
+                .filter { dependentCompositeBuilds.contains(it.name) }
+                .map { compositeBuild ->
+                    println("- ${task.project.name}:${task.name} -> ${compositeBuild.name}:${task.name}")
+
+                    compositeBuild.task(":${task.name}")
+                }
+
+            task.dependsOn(compositeTask)
+        }
+}

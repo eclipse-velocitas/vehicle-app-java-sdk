@@ -21,6 +21,7 @@ import org.eclipse.velocitas.vssprocessor.plugin.version.VERSION_FILE_DEFAULT_NA
  */
 
 plugins {
+    alias(libs.plugins.gradle.nexus.publish.plugin)
     alias(libs.plugins.pluginPublishing)
     signing
     `kotlin-dsl`
@@ -40,7 +41,7 @@ val pluginDescription = "Vehicle Signal Specification (VSS) Plugin of the Veloci
 val versionPath = "$rootDir/../$VERSION_FILE_DEFAULT_NAME"
 val semanticVersion = SemanticVersion(versionPath)
 version = semanticVersion.versionName
-group = "org.eclipse.kuksa"
+group = "org.eclipse.velocitas"
 
 gradlePlugin {
     website.set("https://github.com/eclipse-velocitas/vehicle-app-java-sdk")
@@ -57,23 +58,21 @@ gradlePlugin {
     }
 }
 
+// Snapshot Builds for Plugins might not work since the plugin marker has issues finding the
+// correct jar with the automatic timestamps / build number being added as a postfix to the files.
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = System.getenv("ORG_OSSRH_USERNAME")
+            password = System.getenv("ORG_OSSRH_PASSWORD")
+        }
+    }
+}
+
 // <property>.set calls need to be done instead of "=" because of a IDEA bug.
 // https://youtrack.jetbrains.com/issue/KTIJ-17783/False-positive-Val-cannot-be-reassigned-in-build.gradle.kts
 afterEvaluate {
     publishing {
-        repositories {
-            maven {
-                name = "OSSRHRelease"
-
-                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                credentials {
-                    username = System.getenv("ORG_OSSRH_USERNAME")
-                    password = System.getenv("ORG_OSSRH_PASSWORD")
-                }
-            }
-            // Snapshot are disabled for Plugins since the plugin marker has issues finding the correct jar with the
-            // automatic timestamps / build number being added as a postfix to the files.
-        }
         publications {
             all {
                 with((this as MavenPublication)) {

@@ -26,6 +26,7 @@ import kotlin.io.path.useLines
 import kotlin.io.path.visitFileTree
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
+import org.eclipse.velocitas.version.SemanticVersion
 import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_NAME
 import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_PATH_KEY
 
@@ -47,6 +48,9 @@ import org.eclipse.velocitas.version.VERSION_FILE_DEFAULT_PATH_KEY
 
 val versionDefaultPath = "$rootDir/$VERSION_FILE_DEFAULT_NAME"
 rootProject.ext[VERSION_FILE_DEFAULT_PATH_KEY] = versionDefaultPath
+val semanticVersion = SemanticVersion(versionDefaultPath)
+version = semanticVersion.versionName
+group = "org.eclipse.velocitas"
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -54,6 +58,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.detekt)
     version
+    alias(libs.plugins.gradle.nexus.publish.plugin)
 }
 
 dependencies {
@@ -65,6 +70,15 @@ detekt {
     allRules = false // activate all available (even unstable) rules.
     config.setFrom("$projectDir/config/detekt/detekt.yml")
     baseline = file("$projectDir/config/detekt/baseline.xml")
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = System.getenv("ORG_OSSRH_USERNAME")
+            password = System.getenv("ORG_OSSRH_PASSWORD")
+        }
+    }
 }
 
 tasks.withType<Detekt>().configureEach {

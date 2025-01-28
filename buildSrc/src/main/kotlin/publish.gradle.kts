@@ -32,26 +32,6 @@ val extension = project.extensions.create<PublishPluginExtension>("publish")
 
 afterEvaluate {
     publishing {
-        repositories {
-            maven {
-                name = "OSSRHRelease"
-
-                url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                credentials {
-                    username = System.getenv("ORG_OSSRH_USERNAME")
-                    password = System.getenv("ORG_OSSRH_PASSWORD")
-                }
-            }
-            maven {
-                name = "OSSRHSnapshot"
-
-                url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-                credentials {
-                    username = System.getenv("ORG_OSSRH_USERNAME")
-                    password = System.getenv("ORG_OSSRH_PASSWORD")
-                }
-            }
-        }
         publications {
             register<MavenPublication>(extension.mavenPublicationName.get()) {
                 from(components[extension.componentName.get()])
