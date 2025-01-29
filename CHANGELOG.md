@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.1](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/compare/release/v0.1.0...release/v0.1.1) (2025-01-29)
+
+### Build
+
+* Add Gradle Nexus Publish Plugin to make Releases to MavenCentral ([c7e8d2d](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/commit/c7e8d2dbe331489eb167ef75e555daea2adb4cf4))
+
 ## 0.1.0 (2025-01-27)
 
 ### Features
