@@ -34,4 +34,4 @@ jobs:
           ORG_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           ORG_OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
           ORG_OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-        run: ./gradlew publishAllPublicationsToOSSRHReleaseRepository
+        run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
