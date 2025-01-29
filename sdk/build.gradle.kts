@@ -88,6 +88,8 @@ dependencies {
 val dependentCompositeTasks = setOf(
     "publishToMavenLocal",
     "publishToSonatype",
+    "findSonatypeStagingRepository",
+    "closeAndReleaseSonatypeStagingRepository",
     "test",
 )
 val dependentCompositeBuilds = setOf("vss-processor-plugin")
