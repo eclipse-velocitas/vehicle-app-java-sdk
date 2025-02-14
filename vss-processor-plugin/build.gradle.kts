@@ -1,5 +1,6 @@
 import org.eclipse.velocitas.vssprocessor.plugin.version.SemanticVersion
 import org.eclipse.velocitas.vssprocessor.plugin.version.VERSION_FILE_DEFAULT_NAME
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 /*
  * Copyright (c) 2023 Contributors to the Eclipse Foundation
@@ -42,6 +43,17 @@ val versionPath = "$rootDir/../$VERSION_FILE_DEFAULT_NAME"
 val semanticVersion = SemanticVersion(versionPath)
 version = semanticVersion.versionName
 group = "org.eclipse.velocitas"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
+    }
+}
 
 gradlePlugin {
     website.set("https://github.com/eclipse-velocitas/vehicle-app-java-sdk")
