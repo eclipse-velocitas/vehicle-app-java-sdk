@@ -20,8 +20,7 @@ kotlin {
 dependencies {
     implementation(project(":sdk"))
 
-    implementation("org.eclipse.kuksa:vss-core:0.3.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.1")
 }
 
 vssProcessor {

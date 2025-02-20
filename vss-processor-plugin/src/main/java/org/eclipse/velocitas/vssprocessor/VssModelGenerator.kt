@@ -22,23 +22,28 @@ import org.eclipse.kuksa.vsscore.model.parentClassName
 import org.eclipse.velocitas.vssprocessor.parser.factory.VssParserFactory
 import org.eclipse.velocitas.vssprocessor.spec.VssNodeSpecModel
 import org.eclipse.velocitas.vssprocessor.spec.VssPath
-import org.gradle.api.Project
 import org.gradle.api.logging.Logger
 
 /**
  * Generates a [org.eclipse.kuksa.vsscore.model.VssNode] for every entry listed in the input file.
  * These nodes are a usable kotlin data class reflection of the element.
  *
+ * @param projectDir absolute path to the project which has embedded the vss-processor-plugin.
  * @param logger to log output with
  */
 class VssModelGenerator(
-    val project: Project,
-    val logger: Logger,
+    projectDir: File,
+    private val logger: Logger,
 ) {
     private val vssParserFactory = VssParserFactory()
 
-    val sourceSetBasePath = "build" + fileSeparator + "generated" + fileSeparator + "vss" + fileSeparator + "kotlin"
-    val outputPath = sourceSetBasePath + fileSeparator + PACKAGE_NAME.replace(".", fileSeparator)
+    private val packageName = "org.eclipse.velocitas.vss"
+
+    private val buildDir = File(projectDir, "build")
+    private val generatedDir = File(buildDir, "generated")
+    private val vssDir = File(generatedDir, "vss")
+    val sourceSetBaseDir = File(vssDir, "kotlin")
+    val outputDir = File(sourceSetBaseDir, packageName.replace(".", File.separator))
 
     fun generate(vssFiles: Set<File>) {
         val simpleNodeElements = mutableListOf<VssNodeSpecModel>()
@@ -75,27 +80,25 @@ class VssModelGenerator(
 
             specModel.logger = logger
             val classSpec = specModel.createClassSpec(
-                PACKAGE_NAME,
+                packageName,
                 vssPathToVssNode.values,
                 duplicateNodeNames,
             )
 
             val className = classSpec.name ?: throw NoSuchFieldException("Class spec $classSpec has no name field!")
-            val fileSpecBuilder = FileSpec.builder(PACKAGE_NAME, className)
+            val fileSpecBuilder = FileSpec.builder(packageName, className)
 
             val parentImport = buildParentImport(specModel, generatedFilesVssPathToClassName)
             if (parentImport.isNotEmpty()) {
-                fileSpecBuilder.addImport(PACKAGE_NAME, parentImport)
+                fileSpecBuilder.addImport(packageName, parentImport)
             }
 
             val file = fileSpecBuilder
                 .addType(classSpec)
                 .build()
 
-            val sourcePath = sourceSetBasePath + fileSeparator + PACKAGE_NAME.replace(".", fileSeparator)
-            val sourceDir = project.file(sourcePath)
-            sourceDir.mkdirs()
-            sourceDir.resolve(file.name + ".kt").writeText(file.toString())
+            outputDir.mkdirs()
+            outputDir.resolve(file.name + ".kt").writeText(file.toString())
 
             generatedFilesVssPathToClassName[vssPath.path] = className
         }
@@ -132,10 +135,5 @@ class VssModelGenerator(
         } else {
             parentClassName // Main class = File name
         }
-    }
-
-    private companion object {
-        private val fileSeparator = File.separator
-        private const val PACKAGE_NAME = "org.eclipse.velocitas.vss"
     }
 }
