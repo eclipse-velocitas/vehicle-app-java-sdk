@@ -67,9 +67,7 @@ tasks.withType<Test>().configureEach {
 }
 
 dependencies {
-    api(libs.kuksa.java.sdk) {
-        exclude("org.apache.tomcat", "annotations-api")
-    }
+    api(libs.kuksa.java.sdk)
 
     testImplementation(libs.kotest)
     testImplementation(libs.junit.jupiter.api)
