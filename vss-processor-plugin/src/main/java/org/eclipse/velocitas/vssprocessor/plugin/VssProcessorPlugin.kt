@@ -72,17 +72,20 @@ class VssProcessorPlugin : Plugin<Project> {
         // The extension variables are only available after the project has been evaluated
         project.afterEvaluate {
             val modelGenerator = VssModelGenerator(project.projectDir, logger)
-            val sourceSetBaseDir = modelGenerator.sourceSetBaseDir
 
-            addGeneratedPathToSourceSets(project, sourceSetBaseDir)
+            val sourceSetBaseDir = modelGenerator.sourceSetBaseDir
+            val sourceSetBaseDirProperty = project.objects.directoryProperty()
+            sourceSetBaseDirProperty.set(sourceSetBaseDir)
+
+            addGeneratedPathToSourceSets(project, sourceSetBaseDirProperty)
 
             val generateVssModelsTask = project.tasks.register<GenerateVssModelsTask>(GENERATE_TASK_NAME) {
                 vssModelGenerator = modelGenerator
 
-                val vssDir = readVssDir(vssProcessorExtension)
-                this.vssDir.set(vssDir)
+                val vssDirProperty = readVssDir(vssProcessorExtension)
+                this.vssDir.set(vssDirProperty)
 
-                generatedOutputDir.set(sourceSetBaseDir)
+                generatedOutputDir.set(sourceSetBaseDirProperty)
             }
 
             tasks.withType(KotlinCompile::class.java).configureEach {
@@ -97,16 +100,19 @@ class VssProcessorPlugin : Plugin<Project> {
         }
     }
 
-    private fun Project.readVssDir(vssProcessorExtension: VssProcessorPluginExtension): File {
+    private fun Project.readVssDir(vssProcessorExtension: VssProcessorPluginExtension): DirectoryProperty {
         val defaultVssPath = File(rootDir, VSS_FOLDER_NAME)
         val vssPath = vssProcessorExtension.searchPath.get().ifEmpty { defaultVssPath.absolutePath }
         val vssDir = File(vssPath)
-        return vssDir
+
+        val vssDirProperty = project.objects.directoryProperty()
+        vssDirProperty.set(vssDir)
+        return vssDirProperty
     }
 
     private fun addGeneratedPathToSourceSets(
         project: Project,
-        sourceSetBaseDir: File,
+        sourceSetBaseDirProperty: DirectoryProperty,
     ) {
         val extensions = project.extensions
         val pluginManager = project.pluginManager
@@ -118,15 +124,15 @@ class VssProcessorPlugin : Plugin<Project> {
         if (isAndroidApplication) {
             val androidExtension = extensions.getByType(AppExtension::class.java)
             val mainSourceSet = androidExtension.sourceSets.named(SOURCESET_MAIN_NAME).get()
-            mainSourceSet.java.srcDirs(sourceSetBaseDir)
+            mainSourceSet.java.srcDirs(sourceSetBaseDirProperty)
         } else if (isAndroidLibrary) {
             val androidExtension = extensions.getByType(LibraryExtension::class.java)
             val mainSourceSet = androidExtension.sourceSets.named(SOURCESET_MAIN_NAME).get()
-            mainSourceSet.java.srcDirs(sourceSetBaseDir)
+            mainSourceSet.java.srcDirs(sourceSetBaseDirProperty)
         } else if (isJavaProject) {
             val sourceSets = extensions.getByType(SourceSetContainer::class.java)
             val mainSourceSet = sourceSets.named(SOURCESET_MAIN_NAME).get()
-            mainSourceSet.java.srcDirs(sourceSetBaseDir)
+            mainSourceSet.java.srcDirs(sourceSetBaseDirProperty)
         } else {
             throw GradleException("Project does not contain any supported plugin")
         }

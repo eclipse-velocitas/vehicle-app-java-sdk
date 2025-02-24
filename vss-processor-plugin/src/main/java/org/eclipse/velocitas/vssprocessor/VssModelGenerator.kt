@@ -43,7 +43,7 @@ class VssModelGenerator(
     private val generatedDir = File(buildDir, "generated")
     private val vssDir = File(generatedDir, "vss")
     val sourceSetBaseDir = File(vssDir, "kotlin")
-    val outputDir = File(sourceSetBaseDir, packageName.replace(".", File.separator))
+    private val outputDir = File(sourceSetBaseDir, packageName.replace(".", File.separator))
 
     fun generate(vssFiles: Set<File>) {
         val simpleNodeElements = mutableListOf<VssNodeSpecModel>()
