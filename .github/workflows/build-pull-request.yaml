@@ -20,7 +20,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run 'assemble' with Gradle Wrapper
-        run: ./gradlew assemble
+        run: ./gradlew assemble --configuration-cache
 
       - name: Run 'check' with Gradle Wrapper
         run: ./gradlew check
