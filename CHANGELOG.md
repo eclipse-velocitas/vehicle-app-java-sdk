@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.2](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/compare/release/v0.1.1...release/v0.1.2) (2025-03-04)
+
+
+### Bug Fixes
+
+* Add Compability for JDK 11 ([#13](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/issues/13)) ([551fb8d](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/commit/551fb8da0227726077832f3032e02bed84c6c03e))
+* Configuration Cache Support ([#12](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/issues/12)) ([f71b1ca](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/commit/f71b1ca1ae6af79d647bd6414129764996df7122))
+
 ## [0.1.1](https://github.com/eclipse-velocitas/vehicle-app-java-sdk/compare/release/v0.1.0...release/v0.1.1) (2025-01-29)
 
 ### Build
