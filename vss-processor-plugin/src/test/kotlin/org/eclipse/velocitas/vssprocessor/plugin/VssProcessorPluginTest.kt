@@ -18,6 +18,7 @@ package org.eclipse.velocitas.vssprocessor.plugin
 
 import java.io.File
 import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.createTempDirectory
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
 import kotlin.io.path.pathString
@@ -74,7 +75,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     pluginProject.refresh() // So the plugin project does not have 2 :lib includes
                 }
 
-                `when`("the generateVssModels task is executed without correct input") {
+                and("the generateVssModels task is executed without correct input") {
                     val result = gradleRunner
                         .withArguments(GENERATE_VSS_MODELS_TASK_NAME)
                         .buildAndFail()
@@ -103,7 +104,7 @@ class VssProcessorPluginTest : BehaviorSpec({
 
                 pluginProject.add(vssProcessorProject)
 
-                `when`("the generateVssModels task is executed with build cache the #1 time") {
+                and("the generateVssModels task is executed with build cache the #1 time") {
                     pluginProject.localCacheFolder.deleteRecursively()
 
                     val result = gradleRunner
@@ -119,7 +120,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     }
                 }
 
-                `when`("the generateVssModels task is executed with build cache the #2 time") {
+                and("the generateVssModels task is executed with build cache the #2 time") {
                     val result = gradleRunner
                         .withArguments("clean", "--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
                         .build()
@@ -133,7 +134,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     }
                 }
 
-                `when`("the generateVssModels task is executed with build cache the #3 time") {
+                and("the generateVssModels task is executed with build cache the #3 time") {
                     val kspInputDir = vssProcessorProject.buildDir.resolve(KSP_INPUT_BUILD_DIRECTORY)
                     val result = gradleRunner
                         .withArguments("--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
@@ -154,7 +155,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     }
                 }
 
-                `when`("the input of the generateVssModelsTask changes") {
+                and("the input of the generateVssModelsTask changes") {
                     val projectVssDir2 = vssDir2Path.substringAfter(TEST_FOLDER_NAME_DEFAULT)
                     vssProcessorProject.generate(
                         """
@@ -177,7 +178,7 @@ class VssProcessorPluginTest : BehaviorSpec({
                     }
                 }
 
-                `when`("the name of the input of the generateVssModelsTask changes") {
+                and("the name of the input of the generateVssModelsTask changes") {
                     vssFile2.renameTo(File("$vssDir2Path/vss_rel_4.0_test_renamed.yml"))
                     val result = gradleRunner
                         .withArguments("--build-cache", GENERATE_VSS_MODELS_TASK_NAME)
@@ -194,12 +195,70 @@ class VssProcessorPluginTest : BehaviorSpec({
             }
         }
     }
+    given("A java library project with no VSS files in the configured directory") {
+
+        val tempDir = createTempDirectory("empty_vss_test")
+        val emptyVssDir = tempDir.resolve("vss-empty").also { it.toFile().mkdirs() }
+        val libDir = tempDir.resolve("lib").also { it.toFile().mkdirs() }
+
+        tempDir.resolve("settings.gradle.kts").toFile().writeText(
+            """
+            pluginManagement {
+                includeBuild("${System.getProperty("user.dir")}")
+                repositories {
+                    gradlePluginPortal()
+                    mavenCentral()
+                }
+            }
+            dependencyResolutionManagement {
+                repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+                repositories {
+                    mavenLocal()
+                    mavenCentral()
+                }
+            }
+            include(":lib")
+            """.trimIndent(),
+        )
+
+        tempDir.resolve("build.gradle.kts").toFile().writeText("")
+
+        libDir.resolve("build.gradle.kts").toFile().writeText(
+            """
+            plugins {
+                id("java-library")
+                id("org.eclipse.velocitas.vss-processor-plugin")
+            }
+            vssProcessor {
+                searchPath = "${emptyVssDir.toAbsolutePath()}"
+            }
+            """.trimIndent(),
+        )
+
+        val emptyVssDirRunner = GradleRunner.create()
+            .forwardOutput()
+            .withGradleVersion(GRADLE_VERSION_TEST)
+            .withPluginClasspath()
+            .withProjectDir(tempDir.toFile())
+
+        afterSpec { tempDir.toFile().deleteRecursively() }
+
+        `when`("the generateVssModels task is executed") {
+            val result = emptyVssDirRunner
+                .withArguments(":lib:generateVssModels")
+                .buildAndFail()
+
+            then("the build fails with a descriptive error") {
+                result.output shouldContain "No VSS files found"
+            }
+        }
+    }
 }) {
     companion object {
         private const val VSS_TEST_FILE_NAME = "vss_rel_4.0_test.yaml"
         private const val GENERATE_VSS_MODELS_TASK_NAME = "generateVssModels"
         private const val VSS_TEST_FILE_MINIMAL_NAME = "vss_rel_4.0_test_minimal.yaml"
-        private const val GRADLE_VERSION_TEST = "8.7"
+        private const val GRADLE_VERSION_TEST = "9.7.1"
         private const val KSP_INPUT_BUILD_DIRECTORY = "kspInput"
     }
 }
