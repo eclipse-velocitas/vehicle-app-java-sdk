@@ -74,8 +74,8 @@ nexusPublishing {
             val snapshotUri = uri("https://central.sonatype.com/repository/maven-snapshots/")
             snapshotRepositoryUrl.set(snapshotUri)
 
-            username = System.getenv("ORG_OSSRH_USERNAME")
-            password = System.getenv("ORG_OSSRH_PASSWORD")
+            username = System.getenv("SONATYPE_USERNAME")
+            password = System.getenv("SONATYPE_PASSWORD")
         }
     }
 }
