@@ -75,18 +75,17 @@ dependencies {
 }
 
 // Tasks for included composite builds need to be called separately. For convenience sake we depend on the most used
-// tasks. Every task execution of this project will then be forwarded to the included build project. Since this module
-// is hard coupled to the
+// tasks. Every task execution of this project will then be forwarded to the included build project.
 //
 // We have to manually define the task names because the task() method of the included build throws an error for any
 // unknown task.
 //
+// Publishing-related tasks (e.g. publishToMavenLocal, publishToSonatype, closeAndReleaseSonatypeStagingRepository)
+// are intentionally omitted here because composite/included builds maintain their own independent staging repositories
+// and publishing lifecycles. They should be invoked explicitly per project.
+//
 // WARNING: Do not depend on the task "clean" here: https://github.com/gradle/gradle/issues/23585
 val dependentCompositeTasks = setOf(
-    "publishToMavenLocal",
-    "publishToSonatype",
-    "findSonatypeStagingRepository",
-    "closeAndReleaseSonatypeStagingRepository",
     "test",
 )
 val dependentCompositeBuilds = setOf("vss-processor-plugin")
