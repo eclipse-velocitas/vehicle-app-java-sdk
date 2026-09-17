@@ -32,6 +32,6 @@ jobs:
           ORG_GPG_KEY_ID: ${{ secrets.GPG_SUBKEY_ID }}
           ORG_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           ORG_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          ORG_OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-          ORG_OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
