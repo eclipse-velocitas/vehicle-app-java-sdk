@@ -27,7 +27,7 @@ jobs:
       - name: Set Release Version
         run: ./gradlew setReleaseVersion # Do not chain this command because it writes into a file which needs to be re-read inside the next gradle command
 
-      - name: Publish Library
+      - name: Publish and Release SDK
         env:
           ORG_GPG_KEY_ID: ${{ secrets.GPG_SUBKEY_ID }}
           ORG_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
@@ -35,3 +35,13 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
         run: ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
+
+      - name: Publish and Release VSS Processor Plugin
+        working-directory: vss-processor-plugin
+        env:
+          ORG_GPG_KEY_ID: ${{ secrets.GPG_SUBKEY_ID }}
+          ORG_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          ORG_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_SONATYPE_TOKEN_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_SONATYPE_TOKEN_USERNAME }}
+        run: ../gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
